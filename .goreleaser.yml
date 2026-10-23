@@ -1,0 +1,46 @@
+version: 2
+
+project_name: ask-llm-cli
+
+builds:
+  - id: ask-llm-cli
+    main: ./cmd/ask-llm-cli
+    binary: ask-llm-cli
+    ldflags:
+      - -s -w -X main.version={{ .Version }}
+    goos:
+      - darwin
+      - linux
+      - windows
+    goarch:
+      - amd64
+      - arm64
+
+archives:
+  - id: versioned
+    formats:
+      - tar.gz
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    files:
+      - LICENSE
+      - README.md
+      - internal/request/schemas/LICENSE
+      - internal/request/schemas/SOURCE.md
+
+checksum:
+  name_template: checksums.txt
+
+release:
+  mode: keep-existing
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^ci:"
