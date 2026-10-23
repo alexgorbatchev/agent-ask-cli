@@ -29,7 +29,7 @@ func Run(ctx context.Context, o Options, stdin io.Reader, stdout io.Writer) (err
 	if err != nil {
 		return err
 	}
-	temp, err := os.MkdirTemp("", "ask-llm-cli-")
+	temp, err := os.MkdirTemp("", "agent-ask-cli-")
 	if err != nil {
 		return failure("configuration_failed", "Cannot create request workspace")
 	}

@@ -1,4 +1,4 @@
-`ask-llm-cli` lets agents submit one fresh request through an installed, authenticated Claude Code or Codex harness. Pass instructions, optional data, and optional JSON schemas directly on the command line, from files, or through stdin.
+`agent-ask-cli` lets agents submit one fresh request through an installed, authenticated Claude Code or Codex harness. Pass instructions, optional data, and optional JSON schemas directly on the command line, from files, or through stdin.
 
 # What It Does
 
@@ -25,7 +25,7 @@
 
 # Installation
 
-This project is available in the local workspace; a binary release has not been published.
+Source and the operational skill are available in the public [GitHub repository](https://github.com/alexgorbatchev/agent-ask-cli). A binary release has not been published.
 
 # Setup
 
@@ -35,7 +35,7 @@ This project is available in the local workspace; a binary release has not been 
 # Quick Start
 
 ```sh
-ask-llm-cli request run --harness claude \
+agent-ask-cli request run --harness claude \
   --prompt 'Reply with exactly OK' --output-plain
 ```
 
@@ -46,25 +46,25 @@ OK
 ```
 
 ```sh
-ask-llm-cli request run --harness codex --effort low \
+agent-ask-cli request run --harness codex --effort low \
   --prompt 'Remove the artist prefix from the title' \
   --input-format json --input '{"title":"Artist - Song","artist":"Artist"}' \
   --output-schema '{"type":"object","properties":{"title":{"type":"string"}},"required":["title"],"additionalProperties":false}'
 
-printf '%s' 'Text to summarize' | ask-llm-cli request run \
+printf '%s' 'Text to summarize' | agent-ask-cli request run \
   --harness claude --prompt 'Summarize' --input-stdin --output-stream
 ```
 
 # Options & Flags
 
-`ask-llm-cli`
+`agent-ask-cli`
 
 | Flag | Short | Default | Description |
 | :--- | :--- | :--- | :--- |
 | `--help` | `-h` | false | Print help |
 | `--version` | `-v` | false | Print raw version |
 
-`ask-llm-cli request run`
+`agent-ask-cli request run`
 
 | Flag | Short | Default | Description |
 | :--- | :--- | :--- | :--- |
@@ -87,7 +87,7 @@ printf '%s' 'Text to summarize' | ask-llm-cli request run \
 | `--output-plain` | | false | Answer only |
 | `--output-stream` | | false | NDJSON events and terminal result or error |
 
-Only one content source may read stdin. Output modes are mutually exclusive. See the [CLI contract](docs/cli-contract.md) and [operational skill](skills/ask-llm-cli/SKILL.md) for complete validation, native option mappings, configuration precedence, output schemas, error codes, and examples.
+Only one content source may read stdin. Output modes are mutually exclusive. See the [CLI contract](docs/cli-contract.md) and [operational skill](skills/agent-ask-cli/SKILL.md) for complete validation, native option mappings, configuration precedence, output schemas, error codes, and examples.
 
 # License
 

@@ -1,17 +1,16 @@
 ---
-name: ask-llm-cli
-description: Use ask-llm-cli to submit one fresh request through installed Claude Code or Codex, validate optional JSON schemas, and consume buffered or streaming output.
+name: agent-ask-cli
+description: Use agent-ask-cli to submit requests through installed Claude Code or Codex harnesses.
+author: alexgorbatchev
 metadata:
   created_on: 2026-10-23 11:18
-  last_modified: 2026-10-23 11:55
+  last_modified: 2026-10-23 12:47
   status: current
 ---
 
-# ask-llm-cli
-
 Run one fresh request using the selected installed harness and its existing authentication. Native tool calls and internal retries may occur. The process runs with native permissions and may modify files through authorized tools. Choose a working directory appropriate to the task.
 
-## `ask-llm-cli`
+## `agent-ask-cli`
 
 Print help when invoked without a command. Request output is identical regardless of `AGENT`. Set `AGENT=1`, `true`, or `yes` for compact help; agent help begins with a skill alert. Explicit help writes stdout; request errors use the error contract below. Version output is the raw version plus a newline.
 
@@ -20,11 +19,11 @@ Print help when invoked without a command. Request output is identical regardles
 | `--help` | `-h` | `bool` | `false` | Print help |
 | `--version` | `-v` | `bool` | `false` | Print version |
 
-## `ask-llm-cli request`
+## `agent-ask-cli request`
 
 Print request command help. Accepts no positional arguments.
 
-## `ask-llm-cli request run`
+## `agent-ask-cli request run`
 
 Submit one user request to `claude` or `codex`. Accepts no positional arguments. Supply exactly one nonempty prompt source. Each remaining source group is optional and accepts one source. Only one group may read stdin. Literal flags always contain content; file flags always contain paths, including a literal filename `-`. All file and directory flags resolve relative to the caller's directory, independently of `--working-dir`.
 
@@ -76,25 +75,25 @@ The wrapper uses `PATH`, native `CODEX_HOME`/`CLAUDE_CONFIG_DIR`, and the select
 Examples:
 
 ```sh
-ask-llm-cli request run --harness claude --prompt 'Summarize' --input 'some notes' --output-plain
-printf '%s' 'some notes' | ask-llm-cli request run --harness codex --prompt 'Summarize' --input-stdin --output-stream
-ask-llm-cli request run --harness codex --prompt 'Clean the title' --input '{"title":"Artist - Title"}' --input-format json --output-schema '{"type":"object","properties":{"title":{"type":"string"}},"required":["title"],"additionalProperties":false}'
-ask-llm-cli request run --harness claude --harness-config-mode clean --harness-config-file settings.json --prompt 'Reply OK' --output-plain
+agent-ask-cli request run --harness claude --prompt 'Summarize' --input 'some notes' --output-plain
+printf '%s' 'some notes' | agent-ask-cli request run --harness codex --prompt 'Summarize' --input-stdin --output-stream
+agent-ask-cli request run --harness codex --prompt 'Clean the title' --input '{"title":"Artist - Title"}' --input-format json --output-schema '{"type":"object","properties":{"title":{"type":"string"}},"required":["title"],"additionalProperties":false}'
+agent-ask-cli request run --harness claude --harness-config-mode clean --harness-config-file settings.json --prompt 'Reply OK' --output-plain
 ```
 
-## `ask-llm-cli skill`
+## `agent-ask-cli skill`
 
 Print Skills CLI installation instructions and the operational skill URL. Accepts no positional arguments or command-specific flags. Works offline from any directory.
 
-## `ask-llm-cli help [command]`
+## `agent-ask-cli help [command]`
 
 Print help for a command path. `command` is optional and may contain nested command names.
 
-## `ask-llm-cli completion`
+## `agent-ask-cli completion`
 
 Generate shell completion scripts using a shell subcommand. Invoked without a shell, prints completion help.
 
-## `ask-llm-cli completion bash`
+## `agent-ask-cli completion bash`
 
 Print Bash completion script.
 
@@ -102,7 +101,7 @@ Print Bash completion script.
 | :--- | :--- | :--- | :--- | :--- |
 | `--no-descriptions` | — | `bool` | `false` | Omit descriptions |
 
-## `ask-llm-cli completion fish`
+## `agent-ask-cli completion fish`
 
 Print Fish completion script.
 
@@ -110,7 +109,7 @@ Print Fish completion script.
 | :--- | :--- | :--- | :--- | :--- |
 | `--no-descriptions` | — | `bool` | `false` | Omit descriptions |
 
-## `ask-llm-cli completion powershell`
+## `agent-ask-cli completion powershell`
 
 Print PowerShell completion script.
 
@@ -118,7 +117,7 @@ Print PowerShell completion script.
 | :--- | :--- | :--- | :--- | :--- |
 | `--no-descriptions` | — | `bool` | `false` | Omit descriptions |
 
-## `ask-llm-cli completion zsh`
+## `agent-ask-cli completion zsh`
 
 Print Zsh completion script.
 

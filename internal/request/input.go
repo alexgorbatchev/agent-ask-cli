@@ -62,7 +62,7 @@ func compileSchema(s Source, data []byte) (*jsonschema.Schema, error) {
 	}
 	name := s.File
 	if name == "" {
-		name = "ask-llm-inline.schema.json"
+		name = "agent-ask-inline.schema.json"
 	}
 	path, err := filepath.Abs(name)
 	if err != nil {

@@ -65,7 +65,7 @@ func TestHelpAndOutputSelection(t *testing.T) {
 		}
 	}
 	for _, flag := range []string{"--output-json", "--output-plain", "--output-stream"} {
-		_, err := executeCommand("request", "run", "--harness", "codex", "--prompt", "hi", "--harness-executable-file", "ask-llm-missing", flag)
+		_, err := executeCommand("request", "run", "--harness", "codex", "--prompt", "hi", "--harness-executable-file", "agent-ask-missing", flag)
 		if err == nil {
 			t.Fatal("missing executable accepted")
 		}
@@ -73,7 +73,7 @@ func TestHelpAndOutputSelection(t *testing.T) {
 }
 
 func TestSuccessfulRequestCommand(t *testing.T) {
-	t.Setenv("ASK_LLM_COMMAND_HELPER", "1")
+	t.Setenv("AGENT_ASK_COMMAND_HELPER", "1")
 	exe, err := os.Executable()
 	if err != nil {
 		t.Fatal(err)
@@ -102,7 +102,7 @@ func TestSuccessfulRequestCommand(t *testing.T) {
 }
 
 func TestMain(m *testing.M) {
-	if os.Getenv("ASK_LLM_COMMAND_HELPER") == "1" {
+	if os.Getenv("AGENT_ASK_COMMAND_HELPER") == "1" {
 		input, err := io.ReadAll(os.Stdin)
 		if err != nil || !strings.Contains(string(input), "input text") {
 			os.Exit(2)
@@ -126,7 +126,7 @@ func TestExecuteVersion(t *testing.T) {
 	}
 	defer reader.Close()
 	defer func() { os.Args = previousArgs; os.Stdout = previousOut }()
-	os.Args = []string{"ask-llm-cli", "--version"}
+	os.Args = []string{"agent-ask-cli", "--version"}
 	os.Stdout = writer
 	code := execute()
 	if err := writer.Close(); err != nil {

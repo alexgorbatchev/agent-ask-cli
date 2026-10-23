@@ -76,7 +76,7 @@ func TestInvocationValidation(t *testing.T) {
 		name, harness, code string
 		change              func(*Options)
 	}{
-		{"path lookup", "codex", "harness_unavailable", func(o *Options) { o.Executable = "ask-llm-missing-harness" }},
+		{"path lookup", "codex", "harness_unavailable", func(o *Options) { o.Executable = "agent-ask-missing-harness" }},
 		{"directory", "codex", "invalid_request", func(o *Options) { o.WorkingDir = "missing" }},
 		{"home", "codex", "configuration_failed", func(o *Options) { o.HomeDir = "missing" }},
 		{"config", "codex", "configuration_failed", func(o *Options) { o.ConfigFile = "missing" }},

@@ -1,4 +1,4 @@
-module github.com/alexgorbatchev/ask-llm-cli
+module github.com/alexgorbatchev/agent-ask-cli
 
 go 1.27.2
 

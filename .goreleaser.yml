@@ -1,11 +1,11 @@
 version: 2
 
-project_name: ask-llm-cli
+project_name: agent-ask-cli
 
 builds:
-  - id: ask-llm-cli
-    main: ./cmd/ask-llm-cli
-    binary: ask-llm-cli
+  - id: agent-ask-cli
+    main: ./cmd/agent-ask-cli
+    binary: agent-ask-cli
     ldflags:
       - -s -w -X main.version={{ .Version }}
     goos:

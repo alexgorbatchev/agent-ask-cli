@@ -1,10 +1,10 @@
 ---
 created_on: 2026-10-23 11:12
-last_modified: 2026-10-23 11:55
+last_modified: 2026-10-23 12:47
 status: current
 ---
 
-# ask-llm-cli contract
+# agent-ask-cli contract
 
 This Go CLI serves agents that submit one fresh request to an already installed,
 authenticated Claude Code or Codex harness. Tools, internal model requests, and
@@ -13,8 +13,8 @@ resume, API-key management, harness installation, or Engine-specific behavior.
 
 ## Commands
 
-`ask-llm-cli request run --harness claude|codex [options]` executes a request.
-`ask-llm-cli skill` prints the operational skill installation reference.
+`agent-ask-cli request run --harness claude|codex [options]` executes a request.
+`agent-ask-cli skill` prints the operational skill installation reference.
 `--help`, `--version`, and framework completion commands expose CLI metadata.
 
 ## Content sources
@@ -150,15 +150,15 @@ Initial exit codes are 0 for success and 1 for a reported failure.
 ## Examples
 
 ```sh
-ask-llm-cli request run --harness claude \
+agent-ask-cli request run --harness claude \
   --prompt 'Summarize this text' --input 'The meeting covered...' --output-plain
 
-ask-llm-cli request run --harness codex --effort low \
+agent-ask-cli request run --harness codex --effort low \
   --prompt 'Remove duplicated artist prefixes; preserve mix names.' \
   --input-format json --input '{"title":"Artist - Song","artist":"Artist"}' \
   --output-schema '{"type":"object","properties":{"title":{"type":"string"},"artist":{"type":"string"}},"required":["title","artist"],"additionalProperties":false}'
 
-printf '%s' 'Text to summarize' | ask-llm-cli request run \
+printf '%s' 'Text to summarize' | agent-ask-cli request run \
   --harness claude --prompt 'Summarize this text' --input-stdin --output-stream
 ```
 
@@ -166,7 +166,7 @@ printf '%s' 'Text to summarize' | ask-llm-cli request run \
 
 `agent-parser` owns live harness decoding, including Codex exec JSONL, Claude
 stream deltas, tool activity, errors, and final structured results (D2).
-`ask-llm-cli` owns process execution, lifecycle, configuration, schema validation,
+`agent-ask-cli` owns process execution, lifecycle, configuration, schema validation,
 and result delivery. Engine CLI retains its cleanup prompt and music-specific
 selection/validation. Transcript/process discovery from `agent-watcher` is not
 needed for a subprocess owned directly by this CLI.

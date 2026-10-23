@@ -1,5 +1,5 @@
 /bin/
-/ask-llm-cli
+/agent-ask-cli
 *.exe
 *.exe~
 *.dll

@@ -9,16 +9,16 @@ setup:
 
 # Run the CLI
 run *args:
-    go run ./cmd/ask-llm-cli {{args}}
+    go run ./cmd/agent-ask-cli {{args}}
 
 # Run with compact agent help
 run-ai *args:
-    AGENT=1 go run ./cmd/ask-llm-cli {{args}}
+    AGENT=1 go run ./cmd/agent-ask-cli {{args}}
 
 # Build the local binary
 build:
     mkdir -p bin
-    go build -o bin/ask-llm-cli ./cmd/ask-llm-cli
+    go build -o bin/agent-ask-cli ./cmd/agent-ask-cli
 
 # Run offline behavioral tests
 test:

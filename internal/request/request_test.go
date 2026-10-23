@@ -16,7 +16,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	if mode := os.Getenv("ASK_LLM_TEST_HARNESS"); mode != "" {
+	if mode := os.Getenv("AGENT_ASK_TEST_HARNESS"); mode != "" {
 		helper(mode)
 		os.Exit(0)
 	}
@@ -28,7 +28,7 @@ func helper(mode string) {
 	if err != nil {
 		os.Exit(8)
 	}
-	if path := os.Getenv("ASK_LLM_CAPTURE"); path != "" {
+	if path := os.Getenv("AGENT_ASK_CAPTURE"); path != "" {
 		cwd, err := os.Getwd()
 		if err != nil {
 			os.Exit(8)
@@ -51,12 +51,12 @@ func helper(mode string) {
 			os.Exit(8)
 		}
 		child := exec.Command(exe)
-		child.Env = replaceEnv(os.Environ(), "ASK_LLM_TEST_HARNESS", "child")
+		child.Env = replaceEnv(os.Environ(), "AGENT_ASK_TEST_HARNESS", "child")
 		child.Stdout = os.Stdout
 		if err := child.Start(); err != nil {
 			os.Exit(8)
 		}
-		if err := os.WriteFile(os.Getenv("ASK_LLM_CHILD_PID"), []byte(fmt.Sprint(child.Process.Pid)), 0600); err != nil {
+		if err := os.WriteFile(os.Getenv("AGENT_ASK_CHILD_PID"), []byte(fmt.Sprint(child.Process.Pid)), 0600); err != nil {
 			os.Exit(8)
 		}
 		time.Sleep(time.Minute)
@@ -64,7 +64,7 @@ func helper(mode string) {
 	}
 	if mode == "child" {
 		for {
-			if err := os.WriteFile(os.Getenv("ASK_LLM_HEARTBEAT"), []byte(time.Now().String()), 0600); err != nil {
+			if err := os.WriteFile(os.Getenv("AGENT_ASK_HEARTBEAT"), []byte(time.Now().String()), 0600); err != nil {
 				os.Exit(8)
 			}
 			time.Sleep(10 * time.Millisecond)
@@ -145,7 +145,7 @@ func TestRunHarnessResults(t *testing.T) {
 	}
 	for _, tt := range cases {
 		t.Run(tt.mode+tt.output, func(t *testing.T) {
-			t.Setenv("ASK_LLM_TEST_HARNESS", tt.mode)
+			t.Setenv("AGENT_ASK_TEST_HARNESS", tt.mode)
 			o := options(t, tt.harness)
 			o.OutputMode = tt.output
 			if tt.schema != "" {
@@ -220,7 +220,7 @@ func TestRunHarnessResults(t *testing.T) {
 func TestRunCancellation(t *testing.T) {
 	for _, cancelled := range []bool{false, true} {
 		t.Run(fmt.Sprint(cancelled), func(t *testing.T) {
-			t.Setenv("ASK_LLM_TEST_HARNESS", "sleep")
+			t.Setenv("AGENT_ASK_TEST_HARNESS", "sleep")
 			o := options(t, "codex")
 			o.Timeout = 80 * time.Millisecond
 			ctx, cancel := context.WithCancel(context.Background())
@@ -246,11 +246,11 @@ func TestRunCancellation(t *testing.T) {
 }
 
 func TestRunKillsDescendants(t *testing.T) {
-	t.Setenv("ASK_LLM_TEST_HARNESS", "tree")
+	t.Setenv("AGENT_ASK_TEST_HARNESS", "tree")
 	dir := t.TempDir()
 	heartbeat := filepath.Join(dir, "heartbeat")
-	t.Setenv("ASK_LLM_HEARTBEAT", heartbeat)
-	t.Setenv("ASK_LLM_CHILD_PID", filepath.Join(dir, "pid"))
+	t.Setenv("AGENT_ASK_HEARTBEAT", heartbeat)
+	t.Setenv("AGENT_ASK_CHILD_PID", filepath.Join(dir, "pid"))
 	o := options(t, "codex")
 	ctx, cancel := context.WithCancel(context.Background())
 	done := make(chan error, 1)
@@ -291,7 +291,7 @@ func (brokenWriter) Write([]byte) (int, error) { return 0, io.ErrClosedPipe }
 func TestRunOutputFailure(t *testing.T) {
 	for _, mode := range []string{"plain", "json", "stream"} {
 		t.Run(mode, func(t *testing.T) {
-			t.Setenv("ASK_LLM_TEST_HARNESS", "codex")
+			t.Setenv("AGENT_ASK_TEST_HARNESS", "codex")
 			o := options(t, "codex")
 			o.OutputMode = mode
 			err := Run(context.Background(), o, strings.NewReader(""), brokenWriter{})
@@ -327,7 +327,7 @@ func (w *limitedWriter) Write(p []byte) (int, error) {
 	return len(p), nil
 }
 func TestStreamWriteFailureDuringEvents(t *testing.T) {
-	t.Setenv("ASK_LLM_TEST_HARNESS", "codex")
+	t.Setenv("AGENT_ASK_TEST_HARNESS", "codex")
 	o := options(t, "codex")
 	o.OutputMode = "stream"
 	err := Run(context.Background(), o, strings.NewReader(""), &limitedWriter{})

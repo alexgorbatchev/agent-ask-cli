@@ -7,7 +7,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/alexgorbatchev/ask-llm-cli/internal/request"
+	"github.com/alexgorbatchev/agent-ask-cli/internal/request"
 	"github.com/spf13/cobra"
 )
 
