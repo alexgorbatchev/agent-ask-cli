@@ -4,7 +4,7 @@ description: Use agent-ask-cli to submit requests through installed Claude Code 
 author: alexgorbatchev
 metadata:
   created_on: 2026-10-23 11:18
-  last_modified: 2026-10-23 12:47
+  last_modified: 2026-10-23 13:18
   status: current
 ---
 
@@ -60,7 +60,7 @@ Input is UTF-8, at most 16 MiB per source. `text` validates as a JSON string. `j
 
 Input data is appended to instructions as a JSON encoded value, labelled with its original text/json format. Schemas are optional. Output schemas are supplied to the native harness and independently checked after a successful process exit. Without an output schema the answer is always a string, even if it looks like JSON.
 
-Configuration precedence is selected native baseline, explicit native file overlay, then explicit model/effort/thinking. Codex overlays are passed through native `-c` overrides; paths inside them resolve as native CLI overrides relative to `--working-dir`. Native strict config validation is enabled. Claude settings use native `--settings` and are validated before launch against a bundled offline native settings schema, rejecting unknown root settings. Newly introduced native settings may need a snapshot update. Clean mode retains authentication and administrator policy, suppressing automatically discovered personal/project customizations; its suppression controls take precedence over overlay switches that would enable those customizations. Built-in tools remain available. Claude print mode denies actions that would require an interactive approval. Alternate homes must already exist and supply their own authentication. Credential files are never read or copied by this wrapper.
+Configuration precedence is selected native baseline, explicit native file overlay, then explicit model/effort/thinking. Codex overlays are passed through native `-c` overrides; paths inside them resolve as native CLI overrides relative to `--working-dir`. Codex uses its normal native configuration validation, preserving tolerance for its own UI-state fields. Claude settings use native `--settings` and are validated before launch against a bundled offline native settings schema, rejecting unknown root settings. Newly introduced native settings may need a snapshot update. Clean mode retains authentication and administrator policy, suppressing automatically discovered personal/project customizations; its suppression controls take precedence over overlay switches that would enable those customizations. Built-in tools remain available. Claude print mode denies actions that would require an interactive approval. Alternate homes must already exist and supply their own authentication. Credential files are never read or copied by this wrapper.
 
 Codex effort accepts `none|minimal|low|medium|high|xhigh`; thinking `off` maps to effort `none`, and `on` defaults to `medium` when effort is omitted. Contradictory thinking and effort fail. Claude effort accepts `low|medium|high|xhigh|max`; `on` sets `alwaysThinkingEnabled`. Claude `off` requires an explicit supported Claude 4/4.5 model identifier; newer always-thinking model families and unspecified models reject it. Model-specific native rejection remains possible.
 

@@ -163,7 +163,7 @@ func codexArgs(v *invocation, o Options, p prepared, temp string) error {
 	if err != nil {
 		return err
 	}
-	v.args = []string{"exec", "--json", "--ephemeral", "--skip-git-repo-check", "--strict-config"}
+	v.args = []string{"exec", "--json", "--ephemeral", "--skip-git-repo-check"}
 	keys := make([]string, 0, len(config))
 	for key := range config {
 		keys = append(keys, key)

@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -24,6 +25,17 @@ func TestMain(m *testing.M) {
 }
 
 func helper(mode string) {
+	if mode == "codex-ui-state" {
+		settings, err := os.ReadFile(filepath.Join(os.Getenv("CODEX_HOME"), "config.toml"))
+		if err != nil {
+			os.Exit(8)
+		}
+		if bytes.Contains(settings, []byte("screen_reader_detection_done")) && slices.Contains(os.Args, "--strict-config") {
+			fmt.Fprintln(os.Stderr, "unknown configuration field screen_reader_detection_done")
+			os.Exit(2)
+		}
+		mode = "codex"
+	}
 	prompt, err := io.ReadAll(os.Stdin)
 	if err != nil {
 		os.Exit(8)
@@ -131,6 +143,26 @@ func options(t *testing.T, harness string) Options {
 }
 
 const titleSchema = `{"type":"object","properties":{"title":{"type":"string"}},"required":["title"],"additionalProperties":false}`
+
+func TestRunCodexInheritsNativeUIState(t *testing.T) {
+	t.Setenv("AGENT_ASK_TEST_HARNESS", "codex-ui-state")
+	o := options(t, "codex")
+	o.HomeDir = t.TempDir()
+	if err := os.WriteFile(filepath.Join(o.HomeDir, "config.toml"), []byte("screen_reader_detection_done = true\n"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	if err := Run(context.Background(), o, strings.NewReader(""), &out); err != nil {
+		t.Fatal(err)
+	}
+	var result Result
+	if err := json.Unmarshal(out.Bytes(), &result); err != nil {
+		t.Fatal(err)
+	}
+	if result.Output != "answer\n" {
+		t.Fatalf("unexpected answer %v", result.Output)
+	}
+}
 
 func TestRunHarnessResults(t *testing.T) {
 	cases := []struct{ mode, harness, output, schema, wantCode string }{

@@ -1,6 +1,6 @@
 ---
 created_on: 2026-10-23 11:12
-last_modified: 2026-10-23 12:47
+last_modified: 2026-10-23 13:18
 status: current
 ---
 
@@ -80,7 +80,8 @@ settings are passed by private temporary file rather than as settings JSON in
 the process arguments. That schema is
 an offline snapshot; newly introduced native settings may require a schema update.
 
-Codex uses `exec --json --ephemeral --skip-git-repo-check --strict-config`.
+Codex uses `exec --json --ephemeral --skip-git-repo-check` and its normal native
+configuration validation, including tolerance for UI-state fields in its home.
 Native TOML overlays are encoded as native `-c` overrides; paths inside those
 values follow native override semantics relative to `--working-dir`. Clean mode
 ignores user config and user/project rules, suppresses instruction and skill
