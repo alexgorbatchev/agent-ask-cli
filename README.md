@@ -68,9 +68,25 @@ agent-ask-cli request run --harness codex --effort low \
   --prompt 'Remove the artist prefix from the title' \
   --input-format json --input '{"title":"Artist - Song","artist":"Artist"}' \
   --output-schema '{"type":"object","properties":{"title":{"type":"string"}},"required":["title"],"additionalProperties":false}'
+```
 
-printf '%s' 'Text to summarize' | agent-ask-cli request run \
+Sample Output (session and usage values vary):
+
+```json
+{"harness":"codex","output_kind":"json","output":{"title":"Song"},"session_id":"01a16a6a-9bf5-7340-b9b3-4f8c217d5cb0","usage":{"input":20250,"output":28,"cacheRead":0,"cacheWrite":0,"reasoning":0,"total":20278}}
+```
+
+```sh
+printf '%s' 'Meeting notes: finish the CLI today and publish the release tomorrow.' | agent-ask-cli request run \
   --harness claude --prompt 'Summarize' --input-stdin --output-stream
+```
+
+Sample Output (abridged; intermediate events and metadata omitted):
+
+```jsonl
+{"sequence":1,"type":"started","data":{"harness":"claude"}}
+{"sequence":3,"type":"event","data":{"eventType":"agent_message_delta","data":{"delta":"Finish the CLI today; "}}}
+{"sequence":7,"type":"result","data":{"harness":"claude","output_kind":"text","output":"Finish the CLI today; publish the release tomorrow."}}
 ```
 
 # Options & Flags
