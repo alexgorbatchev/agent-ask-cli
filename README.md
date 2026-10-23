@@ -1,5 +1,7 @@
 `agent-ask-cli` lets agents submit one fresh request through an installed, authenticated Claude Code or Codex harness. Pass instructions, optional data, and optional JSON schemas directly on the command line, from files, or through stdin.
 
+CLI tools often need a basic, single-turn LLM call to clean, transform, or summarize data. `agent-ask-cli` lets them reuse an already authenticated harness without obtaining or managing a separate API key.
+
 # What It Does
 
 - **Reuse existing login:** Use the selected harness's configured authentication and model selection.
@@ -25,7 +27,23 @@
 
 # Installation
 
-Source and the operational skill are available in the public [GitHub repository](https://github.com/alexgorbatchev/agent-ask-cli). A binary release has not been published.
+Download the archive for your operating system and architecture from the [latest GitHub release](https://github.com/alexgorbatchev/agent-ask-cli/releases/latest), extract it, and place `agent-ask-cli` on your `PATH`.
+
+For macOS with Apple Silicon:
+
+```sh
+release_url=$(curl -fsSLI -o /dev/null -w '%{url_effective}' https://github.com/alexgorbatchev/agent-ask-cli/releases/latest)
+tag=${release_url##*/}
+version=${tag#v}
+archive="agent-ask-cli_${version}_darwin_arm64.tar.gz"
+curl -fLO "https://github.com/alexgorbatchev/agent-ask-cli/releases/download/${tag}/${archive}"
+tar -xzf "$archive"
+sudo install -d /usr/local/bin
+sudo install -m 755 agent-ask-cli /usr/local/bin/agent-ask-cli
+agent-ask-cli --version
+```
+
+For Intel Macs, replace `darwin_arm64` with `darwin_amd64`.
 
 # Setup
 
