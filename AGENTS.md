@@ -32,5 +32,5 @@ Canonical executable and skill: `agent-ask-cli`. Public repository and Go module
 - Keep `skills/agent-ask-cli/SKILL.md` synchronized in the same change as every public command, option, default, environment variable, output or side-effect change. The top-level `skill` command prints the fixed Skills CLI install instructions and URL; it never embeds or reads the skill at runtime.
 - Use Cobra and cobra-help-tree/v2; agent help begins with the operational skill alert. Raw `--version` output contains only the version and a newline.
 - Keep tests offline and hermetic. Behavioral changes include meaningful tests. Maintain at least 90% statement coverage and run `just check` before committing.
-- Ignore binaries in `bin/`, coverage artifacts, development worktrees and `.tmp/`. Never publish releases, tags or packages without explicit user authorization.
+- Ignore binaries in `bin/`, coverage artifacts, development worktrees and `.tmp/`.
 - Preserve unrelated workspace changes. Ask before registering a workspace submodule. Inspect destination hosts and staged changes for private domains before committing or pushing.
