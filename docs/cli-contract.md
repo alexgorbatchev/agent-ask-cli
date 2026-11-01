@@ -1,6 +1,6 @@
 ---
 created_on: 2026-10-23 11:12
-last_modified: 2026-10-23 13:18
+last_modified: 2026-11-01 12:06
 status: current
 ---
 
@@ -138,7 +138,9 @@ stderr. Native answers and tool outputs remain data.
 For example, a terminal stream error is
 `{"sequence":3,"type":"error","data":{"code":"harness_failed","message":"..."}}`.
 Command/flag parsing failures occur before request execution and use stderr.
-An output-write failure can prevent delivery of a terminal record. Native
+An output-write failure can prevent delivery of a terminal record; the wrapper
+then writes the same JSON error to stderr, so the failure is always reported.
+Native
 records exceeding 32 MiB fail instead of growing memory without a bound.
 Plain structured output is a JSON value followed by a newline. Answer text is
 left unchanged; home-directory display folding does not rewrite model answers.
@@ -166,7 +168,7 @@ printf '%s' 'Text to summarize' | agent-ask-cli request run \
 ## Ownership and verification
 
 `agent-parser` owns live harness decoding, including Codex exec JSONL, Claude
-stream deltas, tool activity, errors, and final structured results (D2).
+stream deltas, tool activity, errors, and final structured results.
 `agent-ask-cli` owns process execution, lifecycle, configuration, schema validation,
 and result delivery. Engine CLI retains its cleanup prompt and music-specific
 selection/validation. Transcript/process discovery from `agent-watcher` is not

@@ -2,15 +2,12 @@ package main
 
 import (
 	"bytes"
-	"errors"
-	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 
+	cobrahelptree "github.com/alexgorbatchev/cobra-help-tree/v4"
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 )
 
 const skillAlert = "ALERT: Agents must read `AGENT=1 agent-ask-cli skill` before using this tool.\n"
@@ -108,73 +105,7 @@ func TestSkillDocumentsCommandInterface(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	out := string(contents)
-	walkCommands(commandTree(t), func(cmd *cobra.Command) {
-		cmd.InitDefaultHelpFlag()
-		cmd.InitDefaultVersionFlag()
-		usage := cmd.Use
-		if cmd.Parent() != nil {
-			usage = cmd.Parent().CommandPath() + " " + usage
-		}
-		heading := "## `" + usage + "`\n"
-		_, section, ok := strings.Cut(out, heading)
-		if !ok {
-			t.Errorf("skill is missing command %s", usage)
-			return
-		}
-		section, _, _ = strings.Cut(section, "\n## ")
-		checkFlags := func(f *pflag.Flag) {
-			if f.Hidden {
-				return
-			}
-			if f.Name == "help" && cmd.Parent() != nil {
-				return // The shared help flag is documented once in the root section.
-			}
-			shorthand := "—"
-			if f.Shorthand != "" {
-				shorthand = "`-" + f.Shorthand + "`"
-			}
-			def := f.DefValue
-			if def == "" {
-				def = `""`
-			}
-			row := fmt.Sprintf("| `--%s` | %s | `%s` | `%s` |", f.Name, shorthand, f.Value.Type(), def)
-			if !strings.Contains(section, row) {
-				t.Errorf("%s skill is missing flag/type/default: %s", usage, row)
-			}
-		}
-		cmd.LocalNonPersistentFlags().VisitAll(checkFlags)
-		cmd.PersistentFlags().VisitAll(checkFlags)
-	})
-}
-
-func TestSkillOutputErrors(t *testing.T) {
-	for _, args := range [][]string{
-		{"skill"},
-		{"--help"},
-	} {
-		t.Run(strings.Join(args, " "), func(t *testing.T) {
-			t.Setenv("AGENT", "1")
-			f, err := os.Create(filepath.Join(t.TempDir(), "closed"))
-			if err != nil {
-				t.Fatal(err)
-			}
-			if err := f.Close(); err != nil {
-				t.Fatal(err)
-			}
-			cmd := newRootCommand()
-			stderr := new(bytes.Buffer)
-			cmd.SetOut(f)
-			cmd.SetErr(stderr)
-			cmd.SetArgs(args)
-			err = cmd.Execute()
-			if args[0] == "skill" {
-				if !errors.Is(err, os.ErrClosed) {
-					t.Fatalf("expected closed output error, got %v", err)
-				}
-			} else if !strings.Contains(stderr.String(), "file already closed") {
-				t.Fatalf("expected help output error on stderr, got %q", stderr.String())
-			}
-		})
+	if omissions := cobrahelptree.SkillOmissions(commandTree(t), techCatalog, string(contents)); len(omissions) > 0 {
+		t.Errorf("skill does not document: %s", strings.Join(omissions, ", "))
 	}
 }

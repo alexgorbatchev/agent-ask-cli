@@ -110,6 +110,12 @@ func prepare(o Options, stdin io.Reader) (prepared, error) {
 	}
 	count := 0
 	for _, s := range []Source{o.Prompt, o.Input, o.InputSchema, o.OutputSchema} {
+		if s.FileSet && s.File == "" {
+			return p, failure("invalid_request", "File source paths must not be empty")
+		}
+		if s.StdinSet && !s.Stdin {
+			return p, failure("invalid_request", "Stdin source flags must be true")
+		}
 		if s.Stdin {
 			count++
 		}

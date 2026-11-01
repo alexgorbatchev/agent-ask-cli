@@ -7,7 +7,7 @@ import (
 
 func encode(w io.Writer, v any) error {
 	if err := json.NewEncoder(w).Encode(v); err != nil {
-		return failure("output_failed", "Cannot write output")
+		return OutputFailure()
 	}
 	return nil
 }
@@ -35,7 +35,7 @@ func (e *emitter) result(mode string, r Result) error {
 	}
 	if mode == "plain" && r.OutputKind == "text" {
 		if _, err := io.WriteString(e.w, r.Output.(string)); err != nil {
-			return failure("output_failed", "Cannot write output")
+			return OutputFailure()
 		}
 		return nil
 	}

@@ -4,7 +4,7 @@ description: Use agent-ask-cli to submit requests through installed Claude Code 
 author: alexgorbatchev
 metadata:
   created_on: 2026-10-23 11:18
-  last_modified: 2026-10-23 13:18
+  last_modified: 2026-11-01 12:06
   status: current
 ---
 
@@ -68,7 +68,7 @@ Buffered JSON has `harness`, `output_kind` (`text|json`), and `output`, with opt
 
 Streaming writes newline-delimited `{sequence,type,data}` records with increasing sequence starting at 1. Types are `started`, `event`, `result`, `error`. `event` holds a normalized agent-parser event. Native deltas have `data.data.delta`; complete snapshots use `data.data.content`. Deltas and snapshots are distinct; partial content is provisional. Exactly one wrapper `result` or `error` terminates a writable stream. A result contains the same envelope as buffered JSON. Usage snapshots replace one another. Native diagnostic errors are sanitized. Native records above 32 MiB fail.
 
-Buffered failures write `{"error":{"code":"...","message":"..."}}` to stderr and exit 1; successful runs exit 0. Request streaming failures produce a terminal stdout error; command/flag parsing failures use stderr. Output write failures can prevent a terminal record. Error codes: `invalid_request`, `invalid_input`, `invalid_schema`, `input_invalid`, `harness_unavailable`, `unsupported_option`, `configuration_failed`, `harness_failed`, `output_invalid`, `timed_out`, `cancelled`, `output_failed`. Timeout or cancellation terminates the harness and its tool descendants. Production temporary schema files are removed on every path.
+Buffered failures write `{"error":{"code":"...","message":"..."}}` to stderr and exit 1; successful runs exit 0. Request streaming failures produce a terminal stdout error; command/flag parsing failures use stderr. Output write failures can prevent a terminal record; the wrapper then writes the JSON error to stderr. Failed stdout writes exit 1 with `output_failed` on stderr for every command, including help, `skill`, completion and `--version`. Error codes: `invalid_request`, `invalid_input`, `invalid_schema`, `input_invalid`, `harness_unavailable`, `unsupported_option`, `configuration_failed`, `harness_failed`, `output_invalid`, `timed_out`, `cancelled`, `output_failed`. Timeout or cancellation terminates the harness and its tool descendants. Production temporary schema files are removed on every path.
 
 The wrapper uses `PATH`, native `CODEX_HOME`/`CLAUDE_CONFIG_DIR`, and the selected harness's authentication/provider environment. `--harness-home-dir` overrides the selected native home variable. Native API keys are optional when the harness is already authenticated with a subscription. Merged explicit Claude settings are staged in a private OS temporary file and removed after the request; native authentication stores are never read or copied by the wrapper. Harness stderr is drained privately. There is no wrapper configuration file, request-envelope input, conversation resume or automatic installation.
 
@@ -87,7 +87,7 @@ Print Skills CLI installation instructions and the operational skill URL. Accept
 
 ## `agent-ask-cli help [command]`
 
-Print help for a command path. `command` is optional and may contain nested command names.
+Print help for a command path. `command` is optional and may contain nested command names. A name that matches no command exits 1 with `invalid_request` on stderr and prints nothing on stdout, as does `--help` after an unknown command.
 
 ## `agent-ask-cli completion`
 

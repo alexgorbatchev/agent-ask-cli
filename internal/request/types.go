@@ -14,6 +14,10 @@ type Source struct {
 	File  string
 	Stdin bool
 	Set   bool
+	// FileSet and StdinSet report that the caller wrote the flag, which separates
+	// an explicitly empty value from an omitted one.
+	FileSet  bool
+	StdinSet bool
 }
 
 type Options struct {
@@ -43,6 +47,10 @@ type Error struct {
 
 func (e *Error) Error() string           { return e.Message }
 func failure(code, message string) error { return &Error{Code: code, Message: message} }
+
+// OutputFailure is the error for output that could not be written to stdout.
+func OutputFailure() error { return failure("output_failed", "Cannot write output") }
+
 func ErrorValue(err error) *Error {
 	var e *Error
 	if errors.As(err, &e) {

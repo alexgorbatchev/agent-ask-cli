@@ -1,41 +1,63 @@
 package main
 
 import (
-	"fmt"
+	"errors"
 
-	"github.com/alexgorbatchev/agent-ask-cli/internal/agent"
-	cobrahelptree "github.com/alexgorbatchev/cobra-help-tree/v2"
+	cobrahelptree "github.com/alexgorbatchev/cobra-help-tree/v4"
 	"github.com/spf13/cobra"
 )
 
+const helpRejectedMark = "help-rejected"
+
+var errUnknownHelpTarget = errors.New("unknown help target")
+
 var techCatalog = cobrahelptree.TechCatalog{
-	"agent-ask-cli": {
-		Summary:     "Run one request through an installed coding harness",
-		Description: "Run one request through an installed coding harness - command-line interface.",
-	},
 	"agent-ask-cli request run": {
-		Summary:  "Submit one fresh request",
-		Metadata: map[string]string{"stdout": "json|text|ndjson", "authentication": "native harness"},
+		Metadata: map[string]string{"stdout": "json|plain|ndjson", "authentication": "native harness"},
 	},
 }
 
 func setupHelp(cmd *cobra.Command) {
 	err := cobrahelptree.SetupWithOptions(cmd, cobrahelptree.HelpOptions{
 		Catalog: techCatalog,
-		Tree:    cobrahelptree.TreeOptions{HideGeneratedCommands: true},
+		Skill:   cobrahelptree.SkillSource{Repository: "alexgorbatchev/agent-ask-cli", Branch: "main"},
+		// outputTracker reports the failure as JSON, so the library stays quiet.
+		OnHelpWriteError: func(*cobra.Command, error) {},
 	})
 	if err != nil {
 		cmd.RunE = func(*cobra.Command, []string) error { return err }
 		return
 	}
-	help := cmd.HelpFunc()
-	cmd.SetHelpFunc(func(c *cobra.Command, args []string) {
-		if agent.IsAgentMode() {
-			if _, err := fmt.Fprintln(c.OutOrStdout(), "ALERT: Agents must read `AGENT=1 agent-ask-cli skill` before using this tool."); err != nil {
-				c.PrintErrln(err)
-				return
-			}
+	rejectUnknownHelpTargets(cmd)
+}
+
+// rejectUnknownHelpTargets closes both routes by which cobra answers help for a
+// command that does not exist with its parent's screen. The --help flag skips
+// argument validation, and the help command drops the words Find could not match.
+func rejectUnknownHelpTargets(root *cobra.Command) {
+	root.InitDefaultHelpCmd()
+	helpCommand, _, err := root.Find([]string{"help"})
+	if err != nil {
+		root.RunE = func(*cobra.Command, []string) error { return err }
+		return
+	}
+
+	printHelp := root.HelpFunc()
+	root.SetHelpFunc(func(c *cobra.Command, args []string) {
+		// The help command's positional arguments are its target, not a typo.
+		if c != helpCommand && c.Flags().NArg() > 0 {
+			mark(c.Root(), helpRejectedMark)
+			return
 		}
-		help(c, args)
+		printHelp(c, args)
 	})
+
+	runHelp := helpCommand.Run
+	helpCommand.RunE = func(c *cobra.Command, args []string) error {
+		if _, unmatched, err := c.Root().Find(args); err != nil || len(unmatched) > 0 {
+			return errUnknownHelpTarget
+		}
+		runHelp(c, args)
+		return nil
+	}
 }

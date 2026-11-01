@@ -5,6 +5,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const runLong = `Submit one request and return its validated answer.
+
+Exactly one prompt source is required. Each of prompt, input, input schema and output schema accepts at most one of its literal, file and stdin forms. At most one of them may read stdin.`
+
 var version = "dev"
 
 func newRootCommand() *cobra.Command {
@@ -12,14 +16,14 @@ func newRootCommand() *cobra.Command {
 	root.SetVersionTemplate("{{.Version}}\n")
 	group := &cobra.Command{Use: "request", Short: "Submit fresh harness requests", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error { return cmd.Help() }}
 	group.AddCommand(newRunCommand())
-	root.AddCommand(group, newSkillCommand())
+	root.AddCommand(group)
 	setupHelp(root)
 	return root
 }
 
 func newRunCommand() *cobra.Command {
 	var o request.Options
-	cmd := &cobra.Command{Use: "run", Short: "Submit one request and return its validated answer", Args: cobra.NoArgs}
+	cmd := &cobra.Command{Use: "run", Short: "Submit one request and return its validated answer", Long: runLong, Args: cobra.NoArgs}
 	sources := []struct {
 		name        string
 		source      *request.Source
@@ -53,12 +57,8 @@ func newRunCommand() *cobra.Command {
 	cmd.RunE = func(cmd *cobra.Command, _ []string) error {
 		for _, s := range sources {
 			s.source.Set = f.Changed(s.name) || f.Changed(s.name+"-file") || f.Changed(s.name+"-stdin")
-			if f.Changed(s.name+"-file") && s.source.File == "" {
-				return &request.Error{Code: "invalid_request", Message: "File source paths must not be empty"}
-			}
-			if f.Changed(s.name+"-stdin") && !s.source.Stdin {
-				return &request.Error{Code: "invalid_request", Message: "Stdin source flags must be true"}
-			}
+			s.source.FileSet = f.Changed(s.name + "-file")
+			s.source.StdinSet = f.Changed(s.name + "-stdin")
 		}
 		o.OutputMode = "json"
 		if plainOutput {
@@ -66,9 +66,7 @@ func newRunCommand() *cobra.Command {
 		}
 		if streamOutput {
 			o.OutputMode = "stream"
-		}
-		if streamOutput {
-			cmd.Root().Annotations = map[string]string{"stream-ran": "true"}
+			mark(cmd.Root(), streamRanMark)
 		}
 		return request.Run(cmd.Context(), o, cmd.InOrStdin(), cmd.OutOrStdout())
 	}
