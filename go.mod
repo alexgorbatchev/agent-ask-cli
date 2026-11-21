@@ -1,4 +1,4 @@
-module github.com/alexgorbatchev/agent-ask-cli
+module github.com/alexgorbatchev/agent-ask-cli/v2
 
 go 1.27.2
 

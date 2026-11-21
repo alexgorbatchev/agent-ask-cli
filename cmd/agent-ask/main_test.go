@@ -13,7 +13,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/alexgorbatchev/agent-ask-cli/internal/request"
+	"github.com/alexgorbatchev/agent-ask-cli/v2/internal/request"
 )
 
 func executeCommand(args ...string) (string, error) {
@@ -306,7 +306,7 @@ func TestAgentValueSelectsHelpMode(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if got := strings.Contains(out, "command: agent-ask-cli\n"); got != tt.isAgent {
+			if got := strings.Contains(out, "command: agent-ask\n"); got != tt.isAgent {
 				t.Errorf("agent help = %v, want %v:\n%s", got, tt.isAgent, out)
 			}
 		})
@@ -412,7 +412,7 @@ func TestExecuteVersion(t *testing.T) {
 	}
 	defer reader.Close()
 	defer func() { os.Args = previousArgs; os.Stdout = previousOut }()
-	os.Args = []string{"agent-ask-cli", "--version"}
+	os.Args = []string{"agent-ask", "--version"}
 	os.Stdout = writer
 	code := execute()
 	if err := writer.Close(); err != nil {

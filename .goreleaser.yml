@@ -4,8 +4,8 @@ project_name: agent-ask-cli
 
 builds:
   - id: agent-ask-cli
-    main: ./cmd/agent-ask-cli
-    binary: agent-ask-cli
+    main: ./cmd/agent-ask
+    binary: agent-ask
     ldflags:
       - -s -w -X main.version={{ .Version }}
     goos:

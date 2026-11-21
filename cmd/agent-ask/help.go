@@ -12,7 +12,7 @@ const helpRejectedMark = "help-rejected"
 var errUnknownHelpTarget = errors.New("unknown help target")
 
 var techCatalog = cobrahelptree.TechCatalog{
-	"agent-ask-cli request run": {
+	"agent-ask request run": {
 		Metadata: map[string]string{"stdout": "json|plain|ndjson", "authentication": "native harness"},
 	},
 }

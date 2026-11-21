@@ -10,14 +10,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const skillAlert = "ALERT: Agents must read `AGENT=1 agent-ask-cli skill` before using this tool.\n"
+const skillAlert = "ALERT: Agents must read `AGENT=1 agent-ask skill` before using this tool.\n"
 
 func TestSkillCommand(t *testing.T) {
-	want, err := os.ReadFile("../../skills/agent-ask-cli/SKILL.md")
+	want, err := os.ReadFile("../../skills/agent-ask/SKILL.md")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !bytes.Contains(want, []byte("name: agent-ask-cli\n")) {
+	if !bytes.Contains(want, []byte("name: agent-ask\n")) {
 		t.Fatal("skill path or frontmatter does not match advertised skill")
 	}
 	for _, mode := range []string{"0", "1"} {
@@ -28,7 +28,7 @@ func TestSkillCommand(t *testing.T) {
 			if err != nil {
 				t.Fatalf("skill failed: %v", err)
 			}
-			if out != "Install the agent-ask-cli skill using the Skills CLI:\n\n  npx skills add alexgorbatchev/agent-ask-cli --skill agent-ask-cli\n\nSkill:\n\n  https://github.com/alexgorbatchev/agent-ask-cli/tree/main/skills/agent-ask-cli\n" {
+			if out != "Install the agent-ask skill using the Skills CLI:\n\n  npx skills add alexgorbatchev/agent-ask-cli --skill agent-ask\n\nSkill:\n\n  https://github.com/alexgorbatchev/agent-ask-cli/tree/main/skills/agent-ask\n" {
 				t.Fatal("skill output must match the fixed installation contract")
 			}
 		})
@@ -39,6 +39,16 @@ func TestSkillCommandRejectsArguments(t *testing.T) {
 	out, err := executeCommand("skill", "extra")
 	if err == nil || !strings.Contains(err.Error(), "unknown command") {
 		t.Fatalf("expected Cobra argument rejection, got %v: %s", err, out)
+	}
+}
+
+func TestCompletionUsesExecutableName(t *testing.T) {
+	out, err := executeCommand("completion", "zsh")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.HasPrefix(out, "#compdef agent-ask\n") {
+		t.Fatalf("unexpected completion header: %q", strings.SplitN(out, "\n", 2)[0])
 	}
 }
 
@@ -101,7 +111,7 @@ func TestHelpSkillAlert(t *testing.T) {
 }
 
 func TestSkillDocumentsCommandInterface(t *testing.T) {
-	contents, err := os.ReadFile("../../skills/agent-ask-cli/SKILL.md")
+	contents, err := os.ReadFile("../../skills/agent-ask/SKILL.md")
 	if err != nil {
 		t.Fatal(err)
 	}

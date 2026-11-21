@@ -1,6 +1,6 @@
-`agent-ask-cli` lets agents submit one fresh request through an installed, authenticated Claude Code or Codex harness. Pass instructions, optional data, and optional JSON schemas directly on the command line, from files, or through stdin.
+`agent-ask` lets agents submit one fresh request through an installed, authenticated Claude Code or Codex harness. Pass instructions, optional data, and optional JSON schemas directly on the command line, from files, or through stdin.
 
-CLI tools often need a basic, single-turn LLM call to clean, transform, or summarize data. `agent-ask-cli` lets them reuse an already authenticated harness without obtaining or managing a separate API key.
+CLI tools often need a basic, single-turn LLM call to clean, transform, or summarize data. `agent-ask` lets them reuse an already authenticated harness without obtaining or managing a separate API key.
 
 # What It Does
 
@@ -27,7 +27,7 @@ CLI tools often need a basic, single-turn LLM call to clean, transform, or summa
 
 # Installation
 
-Download the archive for your operating system and architecture from the [latest GitHub release](https://github.com/alexgorbatchev/agent-ask-cli/releases/latest), extract it, and place `agent-ask-cli` on your `PATH`.
+Download the archive for your operating system and architecture from the [latest GitHub release](https://github.com/alexgorbatchev/agent-ask-cli/releases/latest), extract it, and place `agent-ask` on your `PATH`.
 
 For macOS with Apple Silicon:
 
@@ -39,8 +39,8 @@ archive="agent-ask-cli_${version}_darwin_arm64.tar.gz"
 curl -fLO "https://github.com/alexgorbatchev/agent-ask-cli/releases/download/${tag}/${archive}"
 tar -xzf "$archive"
 sudo install -d /usr/local/bin
-sudo install -m 755 agent-ask-cli /usr/local/bin/agent-ask-cli
-agent-ask-cli --version
+sudo install -m 755 agent-ask /usr/local/bin/agent-ask
+agent-ask --version
 ```
 
 For Intel Macs, replace `darwin_arm64` with `darwin_amd64`.
@@ -53,7 +53,7 @@ For Intel Macs, replace `darwin_arm64` with `darwin_amd64`.
 # Quick Start
 
 ```sh
-agent-ask-cli request run --harness claude \
+agent-ask request run --harness claude \
   --prompt 'Reply with exactly OK' --output-plain
 ```
 
@@ -64,7 +64,7 @@ OK
 ```
 
 ```sh
-agent-ask-cli request run --harness codex --effort low \
+agent-ask request run --harness codex --effort low \
   --prompt 'Remove the artist prefix from the title' \
   --input-format json --input '{"title":"Artist - Song","artist":"Artist"}' \
   --output-schema '{"type":"object","properties":{"title":{"type":"string"}},"required":["title"],"additionalProperties":false}'
@@ -77,7 +77,7 @@ Sample Output (session and usage values vary):
 ```
 
 ```sh
-printf '%s' 'Meeting notes: finish the CLI today and publish the release tomorrow.' | agent-ask-cli request run \
+printf '%s' 'Meeting notes: finish the CLI today and publish the release tomorrow.' | agent-ask request run \
   --harness claude --prompt 'Summarize' --input-stdin --output-stream
 ```
 
@@ -91,14 +91,14 @@ Sample Output (abridged; intermediate events and metadata omitted):
 
 # Options & Flags
 
-`agent-ask-cli`
+`agent-ask`
 
 | Flag | Short | Default | Description |
 | :--- | :--- | :--- | :--- |
 | `--help` | `-h` | false | Print help |
 | `--version` | `-v` | false | Print raw version |
 
-`agent-ask-cli request run`
+`agent-ask request run`
 
 | Flag | Short | Default | Description |
 | :--- | :--- | :--- | :--- |
@@ -121,7 +121,7 @@ Sample Output (abridged; intermediate events and metadata omitted):
 | `--output-plain` | | false | Answer only |
 | `--output-stream` | | false | NDJSON events and terminal result or error |
 
-Only one content source may read stdin. Output modes are mutually exclusive. See the [CLI contract](docs/cli-contract.md) and [operational skill](skills/agent-ask-cli/SKILL.md) for complete validation, native option mappings, configuration precedence, output schemas, error codes, and examples.
+Only one content source may read stdin. Output modes are mutually exclusive. See the [CLI contract](docs/cli-contract.md) and [operational skill](skills/agent-ask/SKILL.md) for complete validation, native option mappings, configuration precedence, output schemas, error codes, and examples.
 
 # License
 

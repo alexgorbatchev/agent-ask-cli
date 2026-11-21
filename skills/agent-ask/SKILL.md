@@ -1,16 +1,16 @@
 ---
-name: agent-ask-cli
-description: Use agent-ask-cli to submit requests through installed Claude Code or Codex harnesses.
+name: agent-ask
+description: Use agent-ask to submit requests through installed Claude Code or Codex harnesses.
 author: alexgorbatchev
 metadata:
   created_on: 2026-10-23 11:18
-  last_modified: 2026-11-01 12:06
+  last_modified: 2026-11-21 07:01
   status: current
 ---
 
 Run one fresh request using the selected installed harness and its existing authentication. Native tool calls and internal retries may occur. The process runs with native permissions and may modify files through authorized tools. Choose a working directory appropriate to the task.
 
-## `agent-ask-cli`
+## `agent-ask`
 
 Print help when invoked without a command. Request output is identical regardless of `AGENT`. Set `AGENT=1`, `true`, or `yes` for compact help; agent help begins with a skill alert. Explicit help writes stdout; request errors use the error contract below. Version output is the raw version plus a newline.
 
@@ -19,11 +19,11 @@ Print help when invoked without a command. Request output is identical regardles
 | `--help` | `-h` | `bool` | `false` | Print help |
 | `--version` | `-v` | `bool` | `false` | Print version |
 
-## `agent-ask-cli request`
+## `agent-ask request`
 
 Print request command help. Accepts no positional arguments.
 
-## `agent-ask-cli request run`
+## `agent-ask request run`
 
 Submit one user request to `claude` or `codex`. Accepts no positional arguments. Supply exactly one nonempty prompt source. Each remaining source group is optional and accepts one source. Only one group may read stdin. Literal flags always contain content; file flags always contain paths, including a literal filename `-`. All file and directory flags resolve relative to the caller's directory, independently of `--working-dir`.
 
@@ -75,25 +75,25 @@ The wrapper uses `PATH`, native `CODEX_HOME`/`CLAUDE_CONFIG_DIR`, and the select
 Examples:
 
 ```sh
-agent-ask-cli request run --harness claude --prompt 'Summarize' --input 'some notes' --output-plain
-printf '%s' 'some notes' | agent-ask-cli request run --harness codex --prompt 'Summarize' --input-stdin --output-stream
-agent-ask-cli request run --harness codex --prompt 'Clean the title' --input '{"title":"Artist - Title"}' --input-format json --output-schema '{"type":"object","properties":{"title":{"type":"string"}},"required":["title"],"additionalProperties":false}'
-agent-ask-cli request run --harness claude --harness-config-mode clean --harness-config-file settings.json --prompt 'Reply OK' --output-plain
+agent-ask request run --harness claude --prompt 'Summarize' --input 'some notes' --output-plain
+printf '%s' 'some notes' | agent-ask request run --harness codex --prompt 'Summarize' --input-stdin --output-stream
+agent-ask request run --harness codex --prompt 'Clean the title' --input '{"title":"Artist - Title"}' --input-format json --output-schema '{"type":"object","properties":{"title":{"type":"string"}},"required":["title"],"additionalProperties":false}'
+agent-ask request run --harness claude --harness-config-mode clean --harness-config-file settings.json --prompt 'Reply OK' --output-plain
 ```
 
-## `agent-ask-cli skill`
+## `agent-ask skill`
 
 Print Skills CLI installation instructions and the operational skill URL. Accepts no positional arguments or command-specific flags. Works offline from any directory.
 
-## `agent-ask-cli help [command]`
+## `agent-ask help [command]`
 
 Print help for a command path. `command` is optional and may contain nested command names. A name that matches no command exits 1 with `invalid_request` on stderr and prints nothing on stdout, as does `--help` after an unknown command.
 
-## `agent-ask-cli completion`
+## `agent-ask completion`
 
 Generate shell completion scripts using a shell subcommand. Invoked without a shell, prints completion help.
 
-## `agent-ask-cli completion bash`
+## `agent-ask completion bash`
 
 Print Bash completion script.
 
@@ -101,7 +101,7 @@ Print Bash completion script.
 | :--- | :--- | :--- | :--- | :--- |
 | `--no-descriptions` | — | `bool` | `false` | Omit descriptions |
 
-## `agent-ask-cli completion fish`
+## `agent-ask completion fish`
 
 Print Fish completion script.
 
@@ -109,7 +109,7 @@ Print Fish completion script.
 | :--- | :--- | :--- | :--- | :--- |
 | `--no-descriptions` | — | `bool` | `false` | Omit descriptions |
 
-## `agent-ask-cli completion powershell`
+## `agent-ask completion powershell`
 
 Print PowerShell completion script.
 
@@ -117,7 +117,7 @@ Print PowerShell completion script.
 | :--- | :--- | :--- | :--- | :--- |
 | `--no-descriptions` | — | `bool` | `false` | Omit descriptions |
 
-## `agent-ask-cli completion zsh`
+## `agent-ask completion zsh`
 
 Print Zsh completion script.
 

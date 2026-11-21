@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/alexgorbatchev/agent-ask-cli/internal/request"
+	"github.com/alexgorbatchev/agent-ask-cli/v2/internal/request"
 	"github.com/spf13/cobra"
 )
 
@@ -12,7 +12,7 @@ Exactly one prompt source is required. Each of prompt, input, input schema and o
 var version = "dev"
 
 func newRootCommand() *cobra.Command {
-	root := &cobra.Command{Use: "agent-ask-cli", Short: "Run one request through an installed coding harness", Version: version, SilenceUsage: true, SilenceErrors: true, Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error { return cmd.Help() }}
+	root := &cobra.Command{Use: "agent-ask", Short: "Run one request through an installed coding harness", Version: version, SilenceUsage: true, SilenceErrors: true, Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error { return cmd.Help() }}
 	root.SetVersionTemplate("{{.Version}}\n")
 	group := &cobra.Command{Use: "request", Short: "Submit fresh harness requests", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error { return cmd.Help() }}
 	group.AddCommand(newRunCommand())
