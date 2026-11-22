@@ -85,10 +85,18 @@ func compileSchema(s Source, data []byte) (*jsonschema.Schema, error) {
 	return schema, nil
 }
 
+func normalizeHarness(harness string) string {
+	if harness == "antigravity" {
+		return "agy"
+	}
+	return harness
+}
+
 func prepare(o Options, stdin io.Reader) (prepared, error) {
 	var p prepared
-	if o.Harness != "claude" && o.Harness != "codex" {
-		return p, failure("invalid_request", "--harness must be claude or codex")
+	o.Harness = normalizeHarness(o.Harness)
+	if o.Harness != "claude" && o.Harness != "codex" && o.Harness != "agy" {
+		return p, failure("invalid_request", "--harness must be claude, codex, or agy")
 	}
 	if !o.Prompt.Set {
 		return p, failure("invalid_request", "Supply one prompt source")

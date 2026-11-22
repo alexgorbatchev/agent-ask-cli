@@ -7,13 +7,13 @@ status: current
 # agent-ask contract
 
 This Go CLI serves agents that submit one fresh request to an already installed,
-authenticated Claude Code or Codex harness. Tools, internal model requests, and
+authenticated Claude Code, Codex, or Antigravity (`agy`) harness. Tools, internal model requests, and
 native retries are allowed until that request finishes. There is no conversation
 resume, API-key management, harness installation, or Engine-specific behavior.
 
 ## Commands
 
-`agent-ask request run --harness claude|codex [options]` executes a request.
+`agent-ask request run --harness claude|codex|agy [options]` executes a request (`antigravity` is accepted as an alias for `agy` and normalized to `agy` in output).
 `agent-ask skill` prints the operational skill installation reference.
 `--help`, `--version`, and framework completion commands expose CLI metadata.
 
@@ -54,7 +54,7 @@ envelope and never interpreted as command-line arguments or shell commands.
 | Option | Default | Behavior |
 | --- | --- | --- |
 | `--harness-config-mode inherit\|clean` | `inherit` | Load existing configuration, or suppress personal/project customizations while retaining authentication. Built-in tools and administrative policy remain applicable. |
-| `--harness-config-file PATH` | absent | Apply native Claude JSON or Codex TOML configuration over the selected baseline. Explicit request flags win where administrative policy permits. |
+| `--harness-config-file PATH` | absent | Apply native Claude JSON, Codex TOML, or Antigravity JSON configuration over the selected baseline. Explicit request flags win where administrative policy permits. |
 | `--harness-home-dir PATH` | native default/environment | Select an alternate complete harness home, including its authentication and state. This is not a settings-only override. |
 | `--model NAME` | native selection | Override the model. |
 | `--effort LEVEL` | native selection | Override effort using a supported native value. |
@@ -97,8 +97,21 @@ Contradictory thinking/effort combinations fail. Claude effort values are
 `low|medium|high|xhigh|max`; thinking `on` sets `alwaysThinkingEnabled`.
 Thinking `off` is accepted for explicit Claude 4/4.1 dated model identifiers
 and Claude 4.5 identifiers supported by this adapter. Unspecified models,
-aliases, and later families reject `off`. Models and native versions may reject
-options their server does not support.
+aliases, and later families reject `off`. Antigravity (`agy`) uses
+`--input-format stream-json --output-format stream-json --disable-slash-commands`,
+delivering the prompt as one NDJSON `user` message on stdin so arbitrary
+prompts stay out of process arguments. `--harness-home-dir` overrides `HOME`
+so `agy` resolves `.gemini/` inside the alternate home. Clean mode pins
+`--mode default` and `disableSlashCommands: true` while retaining native
+authentication; global `~/.gemini/config` hooks/MCP/rules are not stripped
+because `agy` CLI 1.5.x has no flag to suppress them without relocating `HOME`.
+Explicit Antigravity JSON settings are validated offline against the bundled
+native settings schema (with unknown root keys rejected) and staged in a
+private temporary file passed via `--settings`. Output schemas are staged in
+a private temporary file passed via `--json-schema`. Antigravity effort values
+are `low|medium|high|xhigh|max`; thinking `on` selects `medium` if effort is
+omitted, and thinking `off` is rejected (`unsupported_option`). Models and
+native versions may reject options their server does not support.
 
 ## Output
 

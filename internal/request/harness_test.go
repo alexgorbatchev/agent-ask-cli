@@ -10,7 +10,7 @@ import (
 )
 
 func TestNativeArguments(t *testing.T) {
-	for _, harness := range []string{"codex", "claude"} {
+	for _, harness := range []string{"codex", "claude", "agy", "antigravity"} {
 		t.Run(harness, func(t *testing.T) {
 			o := options(t, harness)
 			o.HomeDir = t.TempDir()
@@ -27,10 +27,13 @@ name = "native"
 			if harness == "claude" {
 				config = `{"permissions":{"allow":["Read"]},"model":"from-file"}`
 			}
+			if harness == "agy" || harness == "antigravity" {
+				config = `{"permissions":{"allow":["command(git)"]},"model":"from-file"}`
+			}
 			if err := os.WriteFile(o.ConfigFile, []byte(config), 0600); err != nil {
 				t.Fatal(err)
 			}
-			v, err := buildInvocation(o, prepared{outputSchema: []byte(titleSchema)}, t.TempDir())
+			v, err := buildInvocation(o, prepared{prompt: "fix titles", outputSchema: []byte(titleSchema)}, t.TempDir())
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -38,7 +41,8 @@ name = "native"
 			if !strings.Contains(args, "--model model") || !strings.Contains(args, "low") {
 				t.Fatalf("args %q", args)
 			}
-			if harness == "codex" {
+			switch harness {
+			case "codex":
 				for _, want := range []string{"--ignore-user-config", "project_doc_max_bytes=0", "skip_host_skill_discovery=true", `features={custom = true}`, "--output-schema"} {
 					if !strings.Contains(args, want) {
 						t.Errorf("missing %q from %s", want, args)
@@ -47,7 +51,7 @@ name = "native"
 				if !strings.Contains(strings.Join(v.env, "\n"), "CODEX_HOME="+o.HomeDir) {
 					t.Fatal("wrong home")
 				}
-			} else {
+			case "claude":
 				if !strings.Contains(args, "--safe-mode") || !strings.Contains(args, "--json-schema") {
 					t.Fatalf("args %q", args)
 				}
@@ -66,6 +70,39 @@ name = "native"
 				if settings["alwaysThinkingEnabled"] != true || settings["model"] != "from-file" {
 					t.Fatalf("settings %+v", settings)
 				}
+			default:
+				for _, want := range []string{"--input-format stream-json", "--output-format stream-json", "--disable-slash-commands", "--mode default", "--effort low", "--json-schema"} {
+					if !strings.Contains(args, want) {
+						t.Errorf("missing %q from %s", want, args)
+					}
+				}
+				if !strings.Contains(strings.Join(v.env, "\n"), "HOME="+o.HomeDir) {
+					t.Fatal("wrong agy HOME")
+				}
+				var inputMsg struct {
+					Event   string `json:"event"`
+					Message struct {
+						Content string `json:"content"`
+					} `json:"message"`
+				}
+				if err := json.Unmarshal([]byte(v.stdin), &inputMsg); err != nil || inputMsg.Event != "user" || inputMsg.Message.Content != "fix titles" {
+					t.Fatalf("unexpected agy stdin %q err=%v", v.stdin, err)
+				}
+				var settings map[string]any
+				for i, arg := range v.args {
+					if arg == "--settings" {
+						data, err := os.ReadFile(v.args[i+1])
+						if err != nil {
+							t.Fatal(err)
+						}
+						if err := json.Unmarshal(data, &settings); err != nil {
+							t.Fatal(err)
+						}
+					}
+				}
+				if settings["disableSlashCommands"] != true || settings["model"] != "from-file" {
+					t.Fatalf("agy settings %+v", settings)
+				}
 			}
 		})
 	}
@@ -82,7 +119,9 @@ func TestInvocationValidation(t *testing.T) {
 		{"config", "codex", "configuration_failed", func(o *Options) { o.ConfigFile = "missing" }},
 		{"codex effort", "codex", "unsupported_option", func(o *Options) { o.Effort = "max" }},
 		{"claude effort", "claude", "unsupported_option", func(o *Options) { o.Effort = "none" }},
+		{"agy effort", "agy", "unsupported_option", func(o *Options) { o.Effort = "none" }},
 		{"claude thinking off", "claude", "unsupported_option", func(o *Options) { o.Thinking = "off" }},
+		{"agy thinking off", "agy", "unsupported_option", func(o *Options) { o.Thinking = "off" }},
 		{"thinking conflict off", "codex", "invalid_request", func(o *Options) { o.Thinking = "off"; o.Effort = "high" }},
 		{"thinking conflict on", "codex", "invalid_request", func(o *Options) { o.Thinking = "on"; o.Effort = "none" }},
 	}
@@ -96,7 +135,7 @@ func TestInvocationValidation(t *testing.T) {
 			}
 		})
 	}
-	for _, harness := range []string{"codex", "claude"} {
+	for _, harness := range []string{"codex", "claude", "agy"} {
 		for _, body := range []string{"invalid [", `[]`, "true"} {
 			t.Run(harness+body, func(t *testing.T) {
 				o := options(t, harness)
@@ -114,7 +153,7 @@ func TestInvocationValidation(t *testing.T) {
 
 func TestThinkingMappingAndDefaultPaths(t *testing.T) {
 	t.Chdir(t.TempDir())
-	for _, tt := range []struct{ harness, model, thinking, want string }{{"codex", "", "on", "model_reasoning_effort=\"medium\""}, {"codex", "", "off", "model_reasoning_effort=\"none\""}, {"claude", "claude-sonnet-4-5-20250929", "off", `"alwaysThinkingEnabled":false`}} {
+	for _, tt := range []struct{ harness, model, thinking, want string }{{"codex", "", "on", "model_reasoning_effort=\"medium\""}, {"codex", "", "off", "model_reasoning_effort=\"none\""}, {"claude", "claude-sonnet-4-5-20250929", "off", `"alwaysThinkingEnabled":false`}, {"agy", "", "on", "--effort medium"}} {
 		o := options(t, tt.harness)
 		o.Model = tt.model
 		o.Thinking = tt.thinking
@@ -150,6 +189,22 @@ func TestClaudeSettingsRejections(t *testing.T) {
 		if err := validateClaudeSettings(config); err == nil || ErrorValue(err).Code != "configuration_failed" {
 			t.Fatalf("config=%v err=%v", config, err)
 		}
+	}
+}
+
+func TestAgySettingsRejections(t *testing.T) {
+	for _, config := range []map[string]any{{"agentMode": "bogus"}, {"unknownSetting": true}, {"disableSlashCommands": "yes"}} {
+		if err := validateAgySettings(config); err == nil || ErrorValue(err).Code != "configuration_failed" {
+			t.Fatalf("config=%v err=%v", config, err)
+		}
+	}
+	o := options(t, "agy")
+	o.ConfigFile = filepath.Join(t.TempDir(), "bad.json")
+	if err := os.WriteFile(o.ConfigFile, []byte(`{"unknownSetting":true}`), 0600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := buildInvocation(o, prepared{}, t.TempDir()); err == nil || ErrorValue(err).Code != "configuration_failed" {
+		t.Fatalf("expected agy bad settings rejection, got %v", err)
 	}
 }
 

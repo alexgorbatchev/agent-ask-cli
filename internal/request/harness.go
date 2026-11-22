@@ -17,10 +17,12 @@ type invocation struct {
 	executable string
 	args, env  []string
 	dir        string
+	stdin      string
 }
 
 func buildInvocation(o Options, p prepared, temp string) (invocation, error) {
-	v := invocation{executable: o.Executable, env: os.Environ(), dir: o.WorkingDir}
+	o.Harness = normalizeHarness(o.Harness)
+	v := invocation{executable: o.Executable, env: os.Environ(), dir: o.WorkingDir, stdin: p.prompt}
 	if v.dir == "" {
 		var err error
 		v.dir, err = os.Getwd()
@@ -58,14 +60,20 @@ func buildInvocation(o Options, p prepared, temp string) (invocation, error) {
 			return v, failure("configuration_failed", "Harness home directory must exist")
 		}
 		key := "CODEX_HOME"
-		if o.Harness == "claude" {
+		switch o.Harness {
+		case "claude":
 			key = "CLAUDE_CONFIG_DIR"
+		case "agy":
+			key = "HOME"
 		}
 		v.env = replaceEnv(v.env, key, home)
 	}
-	if o.Harness == "claude" {
+	switch o.Harness {
+	case "claude":
 		err = claudeArgs(&v, o, p, temp)
-	} else {
+	case "agy":
+		err = agyArgs(&v, o, p, temp)
+	default:
 		err = codexArgs(&v, o, p, temp)
 	}
 	return v, err
@@ -90,14 +98,20 @@ func nativeConfig(o Options) (map[string]any, error) {
 	if err != nil {
 		return nil, failure("configuration_failed", "Cannot read harness configuration file")
 	}
-	if o.Harness == "claude" {
+	if o.Harness == "claude" || o.Harness == "agy" {
 		value, err := decodeJSON(b)
 		if err != nil {
+			if o.Harness == "agy" {
+				return nil, failure("configuration_failed", "Antigravity configuration must be a JSON object")
+			}
 			return nil, failure("configuration_failed", "Claude configuration must be a JSON object")
 		}
 		var ok bool
 		config, ok = value.(map[string]any)
 		if !ok {
+			if o.Harness == "agy" {
+				return nil, failure("configuration_failed", "Antigravity configuration must be a JSON object")
+			}
 			return nil, failure("configuration_failed", "Claude configuration must be a JSON object")
 		}
 	} else if err := toml.Unmarshal(b, &config); err != nil {
@@ -215,6 +229,64 @@ func codexArgs(v *invocation, o Options, p prepared, temp string) error {
 		v.args = append(v.args, "--output-schema", path)
 	}
 	v.args = append(v.args, "-")
+	return nil
+}
+
+func agyArgs(v *invocation, o Options, p prepared, temp string) error {
+	config, err := nativeConfig(o)
+	if err != nil {
+		return err
+	}
+	payload, err := json.Marshal(map[string]any{
+		"event":   "user",
+		"message": map[string]any{"content": p.prompt},
+	})
+	if err != nil {
+		return failure("configuration_failed", "Cannot encode Antigravity prompt")
+	}
+	v.stdin = string(payload) + "\n"
+	v.args = []string{"--input-format", "stream-json", "--output-format", "stream-json", "--disable-slash-commands"}
+	if o.ConfigMode == "clean" {
+		v.args = append(v.args, "--mode", "default")
+		config["disableSlashCommands"] = true
+	}
+	if o.Model != "" {
+		v.args = append(v.args, "--model", o.Model)
+	}
+	effort := o.Effort
+	if effort != "" && !oneOf(effort, "low", "medium", "high", "xhigh", "max") {
+		return failure("unsupported_option", "Antigravity effort must be low, medium, high, xhigh, or max")
+	}
+	if o.Thinking == "off" {
+		return failure("unsupported_option", "Antigravity thinking off is unsupported; use --effort low")
+	}
+	if o.Thinking == "on" && effort == "" {
+		effort = "medium"
+	}
+	if effort != "" {
+		v.args = append(v.args, "--effort", effort)
+	}
+	if len(config) > 0 {
+		if err := validateAgySettings(config); err != nil {
+			return err
+		}
+		b, err := json.Marshal(config)
+		if err != nil {
+			return failure("configuration_failed", "Cannot encode Antigravity settings")
+		}
+		path := filepath.Join(temp, "agy-settings.json")
+		if err := os.WriteFile(path, b, 0600); err != nil {
+			return failure("configuration_failed", "Cannot stage Antigravity settings")
+		}
+		v.args = append(v.args, "--settings", path)
+	}
+	if len(p.outputSchema) > 0 {
+		path := filepath.Join(temp, "output.schema.json")
+		if err := os.WriteFile(path, p.outputSchema, 0600); err != nil {
+			return failure("configuration_failed", "Cannot stage output schema")
+		}
+		v.args = append(v.args, "--json-schema", path)
+	}
 	return nil
 }
 

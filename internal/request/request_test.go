@@ -130,6 +130,18 @@ func helper(mode string) {
 		fmt.Println(`{"type":"result","subtype":"error_during_execution","is_error":true,"errors":["secret"]}`)
 	case "claude-empty":
 		fmt.Println(`{"type":"result","subtype":"success"}`)
+	case "agy":
+		fmt.Println(`{"event":"init","conversation_id":"session","init":{"cwd":"/repo","model":"gemini-4-neon-high"}}`)
+		fmt.Println(`{"event":"step_update","step_update":{"conversation_id":"session","step_index":0,"state":"DONE","step_type":"user_input"}}`)
+		fmt.Println(`{"event":"step_update","step_update":{"conversation_id":"session","step_index":1,"state":"ACTIVE","step_type":"agent_response","text_delta":"answer"}}`)
+		fmt.Println(`{"event":"result","result":{"conversation_id":"session","status":"SUCCESS","response":"answer\n","usage":{"input_tokens":5,"output_tokens":2,"thinking_tokens":1,"cache_read_tokens":0,"total_tokens":7}}}`)
+	case "agy-schema":
+		fmt.Println(`{"event":"init","conversation_id":"session","init":{"cwd":"/repo"}}`)
+		fmt.Println(`{"event":"result","result":{"conversation_id":"session","status":"SUCCESS","response":"{\"title\":\"clean\"}","structured_output":{"title":"clean"},"usage":{"input_tokens":5,"output_tokens":2,"total_tokens":7}}}`)
+	case "agy-error":
+		fmt.Println(`{"event":"result","result":{"conversation_id":"session","status":"ERROR","response":"","error":"secret"}}`)
+	case "agy-empty":
+		fmt.Println(`{"event":"result","result":{"conversation_id":"session","status":"SUCCESS"}}`)
 	}
 }
 
@@ -167,9 +179,10 @@ func TestRunCodexInheritsNativeUIState(t *testing.T) {
 func TestRunHarnessResults(t *testing.T) {
 	cases := []struct{ mode, harness, output, schema, wantCode string }{
 		{"codex", "codex", "json", "", ""}, {"claude", "claude", "plain", "", ""}, {"claude", "claude", "stream", "", ""},
-		{"codex-schema", "codex", "json", titleSchema, ""}, {"claude-schema", "claude", "plain", titleSchema, ""}, {"codex-bigint", "codex", "plain", `{"type":"integer"}`, ""},
+		{"agy", "agy", "json", "", ""}, {"agy", "antigravity", "plain", "", ""}, {"agy", "agy", "stream", "", ""},
+		{"codex-schema", "codex", "json", titleSchema, ""}, {"claude-schema", "claude", "plain", titleSchema, ""}, {"agy-schema", "agy", "plain", titleSchema, ""}, {"agy-schema", "antigravity", "json", titleSchema, ""}, {"codex-bigint", "codex", "plain", `{"type":"integer"}`, ""},
 		{"codex-invalid", "codex", "json", titleSchema, "output_invalid"}, {"codex", "codex", "plain", titleSchema, "output_invalid"},
-		{"codex-fail", "codex", "json", "", "harness_failed"}, {"claude-error", "claude", "stream", "", "harness_failed"}, {"claude-empty", "claude", "plain", "", "output_invalid"},
+		{"codex-fail", "codex", "json", "", "harness_failed"}, {"claude-error", "claude", "stream", "", "harness_failed"}, {"agy-error", "agy", "stream", "", "harness_failed"}, {"claude-empty", "claude", "plain", "", "output_invalid"}, {"agy-empty", "agy", "plain", "", "output_invalid"},
 		{"no-result", "codex", "json", "", "harness_failed"}, {"bad-json", "codex", "stream", "", "harness_failed"},
 		{"claude-empty", "claude", "plain", titleSchema, "output_invalid"},
 		{"codex-native-error", "codex", "stream", "", "harness_failed"},
@@ -238,7 +251,7 @@ func TestRunHarnessResults(t *testing.T) {
 				if err := json.Unmarshal(out.Bytes(), &r); err != nil {
 					t.Fatal(err)
 				}
-				if r.Harness != tt.harness || r.SessionID != "session" {
+				if r.Harness != normalizeHarness(tt.harness) || r.SessionID != "session" {
 					t.Fatalf("result %+v", r)
 				}
 				if tt.schema == "" && (r.Output != "answer\n" || r.Usage.Input != 5) {

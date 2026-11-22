@@ -6,7 +6,7 @@ status: current
 
 # agent-ask-cli
 
-Go wrapper for one fresh request through an installed Claude Code or Codex harness.
+Go wrapper for one fresh request through an installed Claude Code, Codex, or Antigravity (`agy`) harness.
 
 Canonical executable and skill: `agent-ask`. Public repository: `alexgorbatchev/agent-ask-cli`. Go module:
 `github.com/alexgorbatchev/agent-ask-cli/v2`.

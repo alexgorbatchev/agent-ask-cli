@@ -1,6 +1,6 @@
 ---
 name: agent-ask
-description: Use agent-ask to submit requests through installed Claude Code or Codex harnesses.
+description: Use agent-ask to submit requests through installed Claude Code, Codex, or Antigravity (agy) harnesses.
 author: alexgorbatchev
 metadata:
   created_on: 2026-10-23 11:18
@@ -25,11 +25,11 @@ Print request command help. Accepts no positional arguments.
 
 ## `agent-ask request run`
 
-Submit one user request to `claude` or `codex`. Accepts no positional arguments. Supply exactly one nonempty prompt source. Each remaining source group is optional and accepts one source. Only one group may read stdin. Literal flags always contain content; file flags always contain paths, including a literal filename `-`. All file and directory flags resolve relative to the caller's directory, independently of `--working-dir`.
+Submit one user request to `claude`, `codex`, or `agy` (alias `antigravity`). Accepts no positional arguments. Supply exactly one nonempty prompt source. Each remaining source group is optional and accepts one source. Only one group may read stdin. Literal flags always contain content; file flags always contain paths, including a literal filename `-`. All file and directory flags resolve relative to the caller's directory, independently of `--working-dir`.
 
 | Flag | Short | Type | Default | Meaning |
 | :--- | :--- | :--- | :--- | :--- |
-| `--harness` | — | `string` | `""` | Required: claude or codex |
+| `--harness` | — | `string` | `""` | Required: claude, codex, or agy (alias: antigravity) |
 | `--prompt` | — | `string` | `""` | Literal instructions |
 | `--prompt-file` | — | `string` | `""` | Instructions file |
 | `--prompt-stdin` | — | `bool` | `false` | Instructions from stdin |
@@ -44,7 +44,7 @@ Submit one user request to `claude` or `codex`. Accepts no positional arguments.
 | `--output-schema-file` | — | `string` | `""` | Output schema file |
 | `--output-schema-stdin` | — | `bool` | `false` | Output schema from stdin |
 | `--harness-config-mode` | — | `string` | `inherit` | inherit or clean |
-| `--harness-config-file` | — | `string` | `""` | Claude JSON or Codex TOML overlay |
+| `--harness-config-file` | — | `string` | `""` | Claude JSON, Codex TOML, or Antigravity JSON overlay |
 | `--harness-home-dir` | — | `string` | `""` | Alternate existing native home, including authentication |
 | `--model` | — | `string` | `""` | Native default when omitted |
 | `--effort` | — | `string` | `""` | Native default when omitted |
@@ -62,7 +62,7 @@ Input data is appended to instructions as a JSON encoded value, labelled with it
 
 Configuration precedence is selected native baseline, explicit native file overlay, then explicit model/effort/thinking. Codex overlays are passed through native `-c` overrides; paths inside them resolve as native CLI overrides relative to `--working-dir`. Codex uses its normal native configuration validation, preserving tolerance for its own UI-state fields. Claude settings use native `--settings` and are validated before launch against a bundled offline native settings schema, rejecting unknown root settings. Newly introduced native settings may need a snapshot update. Clean mode retains authentication and administrator policy, suppressing automatically discovered personal/project customizations; its suppression controls take precedence over overlay switches that would enable those customizations. Built-in tools remain available. Claude print mode denies actions that would require an interactive approval. Alternate homes must already exist and supply their own authentication. Credential files are never read or copied by this wrapper.
 
-Codex effort accepts `none|minimal|low|medium|high|xhigh`; thinking `off` maps to effort `none`, and `on` defaults to `medium` when effort is omitted. Contradictory thinking and effort fail. Claude effort accepts `low|medium|high|xhigh|max`; `on` sets `alwaysThinkingEnabled`. Claude `off` requires an explicit supported Claude 4/4.5 model identifier; newer always-thinking model families and unspecified models reject it. Model-specific native rejection remains possible.
+Codex effort accepts `none|minimal|low|medium|high|xhigh`; thinking `off` maps to effort `none`, and `on` defaults to `medium` when effort is omitted. Contradictory thinking and effort fail. Claude effort accepts `low|medium|high|xhigh|max`; `on` sets `alwaysThinkingEnabled`. Claude `off` requires an explicit supported Claude 4/4.5 model identifier; newer always-thinking model families and unspecified models reject it. Antigravity (`agy`, alias `antigravity`) runs `--input-format stream-json --output-format stream-json --disable-slash-commands`, validates JSON settings offline against its bundled native schema, stages settings and output schemas as private temporary files, uses `--harness-home-dir` to set `HOME` (resolving `.gemini/` inside it), pins `--mode default` and `disableSlashCommands: true` in clean mode, accepts effort `low|medium|high|xhigh|max`, maps thinking `on` to default effort `medium`, and rejects thinking `off`. Model-specific native rejection remains possible.
 
 Buffered JSON has `harness`, `output_kind` (`text|json`), and `output`, with optional native-reported `model`, `session_id` and `usage`. Plain text is unchanged, with no added newline; plain structured JSON has one trailing newline. Buffered modes emit nothing before process success and output validation.
 

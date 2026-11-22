@@ -1,0 +1,518 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://antigravity.google/schemas/v1/settings.json",
+  "title": "Antigravity CLI settings",
+  "description": "Settings for Antigravity CLI, stored in ~/.gemini/antigravity-cli/settings.json. Every key is optional, and a key you leave out uses its default. The CLI keeps keys it doesn't recognize. Documentation: https://antigravity.google/docs/settings?tab=cli",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "URL of this schema, for editor autocomplete and validation. The CLI ignores it.",
+      "examples": [
+        "https://antigravity.google/schemas/v1/settings.json"
+      ]
+    },
+    "agentMode": {
+      "type": "string",
+      "enum": [
+        "",
+        "accept-edits",
+        "auto",
+        "plan"
+      ],
+      "default": "auto",
+      "description": "Execution mode the CLI starts in: \"\" (default mode, which asks before file edits), \"accept-edits\" (approves workspace file edits automatically), \"auto\" (approves edits and safe commands, and asks before irreversible actions; CLI 1.3.5+ on macOS and Linux and 1.4.4+ on Windows, needs the terminal sandbox, and isn't available for business or enterprise accounts), or \"plan\" (researches and plans before making changes). --mode overrides it for one session. If agentMode isn't set, CLI 1.5.7+ starts in \"auto\" where it's available and in default mode otherwise; set \"\" to always start in default mode. If \"auto\" isn't available, the CLI starts in default mode."
+    },
+    "allowNonWorkspaceAccess": {
+      "type": "boolean",
+      "default": false,
+      "description": "Lets the agent read and edit files outside your workspace folders, subject to toolPermission, agentMode, and your permission rules. /config: Non-Workspace Access."
+    },
+    "altScreenMode": {
+      "type": "string",
+      "enum": [
+        "default",
+        "always",
+        "never"
+      ],
+      "default": "default",
+      "description": "How the TUI uses the terminal: \"default\" renders the conversation inline and opens full-screen views in the alternate screen, \"always\" runs the whole TUI in the alternate screen, and \"never\" never uses the alternate screen. /config: Rendering Mode (\"never\" is available only here)."
+    },
+    "artifactReviewPolicy": {
+      "type": "string",
+      "enum": [
+        "asks-for-review",
+        "agent-decides",
+        "always-proceed"
+      ],
+      "default": "asks-for-review",
+      "description": "Whether the agent waits for your review when it asks for feedback on an artifact, such as an implementation plan: \"asks-for-review\" always waits, \"agent-decides\" currently works the same as \"asks-for-review\", and \"always-proceed\" never waits. It doesn't affect file edits. /config: Artifact Review."
+    },
+    "clearScrollbackOnResize": {
+      "type": "boolean",
+      "default": true,
+      "description": "In inline rendering, clears the terminal scrollback when the CLI redraws the conversation, such as after you resize the window."
+    },
+    "colorScheme": {
+      "type": "string",
+      "enum": [
+        "terminal",
+        "light",
+        "solarized light",
+        "colorblind-friendly light",
+        "dark",
+        "solarized dark",
+        "colorblind-friendly dark",
+        "tokyo night"
+      ],
+      "default": "terminal",
+      "description": "Color theme. \"terminal\" uses your terminal's colors. /config: Color Scheme."
+    },
+    "copyOnSelect": {
+      "type": "boolean",
+      "default": true,
+      "description": "In alt-screen mode, copies text to the clipboard when you release a mouse selection. When false, the artifact viewer uses your terminal's own text selection. /config: Copy on Select."
+    },
+    "customModelsConfig": {
+      "$ref": "#/$defs/customModelsConfig",
+      "description": "Extra models for /model when you use a Gemini API key. The CLI reads it only when modelProvider is \"gemini\" and GEMINI_API_KEY is set, and ignores it when you sign in with a Google Account."
+    },
+    "disableSlashCommands": {
+      "type": "boolean",
+      "default": false,
+      "description": "In headless mode (-p), sends prompts that start with / to the model as typed instead of running slash commands or skills. Same as --disable-slash-commands."
+    },
+    "editor": {
+      "type": "string",
+      "default": "auto",
+      "examples": [
+        "auto",
+        "vim",
+        "emacs"
+      ],
+      "description": "External editor for opening artifacts and files and for composing prompts (Ctrl+G). \"auto\" uses $EDITOR, then falls back to vim (macOS and Linux) or to edit and notepad (Windows). Any other value is run as the editor command. /config: Editor."
+    },
+    "editorMode": {
+      "type": "string",
+      "enum": [
+        "default",
+        "vim"
+      ],
+      "default": "default",
+      "description": "Editing model for the prompt: \"default\" or \"vim\" (modal editing). /config: Editor Mode."
+    },
+    "enableTelemetry": {
+      "deprecated": true,
+      "description": "Not read from settings.json. Enable Telemetry in /config is saved with your account, and the CLI removes this key when it saves the file."
+    },
+    "enableTerminalSandbox": {
+      "type": "boolean",
+      "default": false,
+      "description": "Runs the agent's terminal commands in the terminal sandbox. Since CLI 1.4.4, it has no effect where the sandbox isn't available. --sandbox turns it on for one session. /config: Sandbox Mode."
+    },
+    "gcp": {
+      "$ref": "#/$defs/gcpConfig",
+      "description": "Saved by the \"Use a Google Cloud project\" sign-in option, which uses it to fill in the next sign-in. You don't need to edit it."
+    },
+    "hideActiveItems": {
+      "type": "boolean",
+      "default": false,
+      "description": "Hides the list of active subagents and background tasks below the prompt box. /config: Show Active Tasks (inverted)."
+    },
+    "historySize": {
+      "type": "integer",
+      "minimum": -1,
+      "default": 2000,
+      "description": "Number of prompt history entries kept on disk. The CLI trims the history when it exits: -1 keeps every entry, and 0 clears the history."
+    },
+    "hooks": {
+      "deprecated": true,
+      "description": "Not read from settings.json. Put hooks in ~/.gemini/config/hooks.json or <workspace>/.agents/hooks.json instead."
+    },
+    "model": {
+      "type": "string",
+      "default": "",
+      "description": "The model chosen with /model, saved by its label. If it's no longer available, the CLI uses the default model and shows a warning."
+    },
+    "modelProvider": {
+      "type": "string",
+      "enum": [
+        "",
+        "gemini"
+      ],
+      "default": "",
+      "description": "Set to \"gemini\" to send model requests directly to the Gemini API with the key in GEMINI_API_KEY."
+    },
+    "notifications": {
+      "type": "boolean",
+      "default": false,
+      "description": "Rings the terminal bell and shows a desktop notification when the agent needs your approval or an answer, or finishes its turn. /config: Notifications."
+    },
+    "permissions": {
+      "$ref": "#/$defs/permissions",
+      "description": "Allow, ask, and deny rules for the agent's tools (the Global scope in /permissions). A deny rule takes precedence over an ask rule, and an ask rule over an allow rule."
+    },
+    "pickerGrouping": {
+      "type": "string",
+      "enum": [
+        "none",
+        "grouped"
+      ],
+      "default": "none",
+      "description": "How the /resume picker lists conversations: \"none\" (one list, most recent first) or \"grouped\" (grouped by workspace). /config: Conversation Picker Grouping."
+    },
+    "queuedMessages": {
+      "type": "string",
+      "enum": [
+        "queue",
+        "send-immediately"
+      ],
+      "default": "queue",
+      "description": "What happens to a message you send while the agent is working: \"queue\" holds it until the current turn ends, and \"send-immediately\" interrupts the agent and sends it right away. /config: Queued Messages."
+    },
+    "runningLightSpeed": {
+      "type": "string",
+      "enum": [
+        "fast",
+        "medium",
+        "slow",
+        "off"
+      ],
+      "default": "medium",
+      "description": "Speed of the progress indicator animation. /config: Animation Speed."
+    },
+    "sandboxProxy": {
+      "$ref": "#/$defs/sandboxProxy",
+      "description": "Sends network traffic from sandboxed terminal commands through your own HTTP proxy instead of the built-in one. It applies only while the terminal sandbox is on, and your proxy then has to enforce any read_url rules."
+    },
+    "showFeedbackSurvey": {
+      "type": "boolean",
+      "default": true,
+      "description": "Shows a brief feedback survey from time to time after a task finishes. /config: Show Feedback Survey."
+    },
+    "showTips": {
+      "type": "boolean",
+      "default": true,
+      "description": "Shows usage tips while the agent is generating a response. /config: Show Tips."
+    },
+    "statusLine": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/statusLine"
+        },
+        {
+          "type": "boolean",
+          "deprecated": true,
+          "description": "Not recommended: a boolean is read as an object without a command, so no script runs."
+        }
+      ],
+      "description": "Runs your own script to draw the status line below the prompt box."
+    },
+    "title": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/title"
+        },
+        {
+          "type": "boolean",
+          "deprecated": true,
+          "description": "Not recommended: a boolean is read as an object without a command, so no script runs."
+        }
+      ],
+      "description": "Runs your own script to set the terminal window title."
+    },
+    "toolPermission": {
+      "type": "string",
+      "enum": [
+        "request-review",
+        "proceed-in-sandbox",
+        "always-proceed",
+        "strict"
+      ],
+      "default": "request-review",
+      "description": "When the agent asks before using a tool: \"request-review\" asks before write, bash, web, and MCP tools unless an allow rule covers them; \"proceed-in-sandbox\" runs terminal commands without asking when the sandbox is on and the command runs inside it (since CLI 1.4.4, it works like \"request-review\" where the sandbox isn't available); \"always-proceed\" runs commands, web requests, and MCP tools without asking unless an ask or deny rule matches; and \"strict\" asks before every tool action, including file reads, even if an allow rule matches. Deny rules apply in every mode. /config: Tool Permission."
+    },
+    "trustedWorkspaces": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "Folders you chose to trust when the CLI asked. The CLI adds entries for you."
+    },
+    "useG1Credits": {
+      "type": "boolean",
+      "default": false,
+      "description": "Uses your AI credits for model requests after your plan's quota runs out. Not available for business accounts. /config: Use AI Credits."
+    },
+    "useTerminalCursor": {
+      "type": "boolean",
+      "default": false,
+      "description": "Uses your terminal's own cursor shape instead of a block cursor."
+    },
+    "verbosity": {
+      "type": "string",
+      "enum": [
+        "high",
+        "medium",
+        "low"
+      ],
+      "default": "medium",
+      "description": "How much of the agent's work the conversation shows: \"high\" shows every tool call, command, and thought in full; \"medium\" groups related tool calls and thoughts into summaries while keeping commands and responses visible; and \"low\" shows only responses and collapses tool activity into a token usage summary. /config: Verbosity."
+    },
+    "vimInsertFirst": {
+      "type": "boolean",
+      "default": false,
+      "description": "When editorMode is \"vim\", starts the prompt in Insert mode and makes a bare Enter submit. /config: Editor Mode › Insert First."
+    }
+  },
+  "$defs": {
+    "permissionRule": {
+      "type": "string",
+      "pattern": "^(command|read_file|write_file|read_url|execute_url|mcp|unsandboxed)\\(.*\\)$",
+      "description": "A rule in the form action(target), with no space before the parenthesis. Actions: command, read_file, write_file, read_url, execute_url, and mcp (unsandboxed for business and enterprise accounts). For example: command(git status), read_file(/var/log), read_url(github.com), or mcp(github/*). The CLI ignores rules it can't parse."
+    },
+    "permissions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "allow": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/permissionRule"
+          },
+          "description": "Actions the agent may take without asking."
+        },
+        "ask": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/permissionRule"
+          },
+          "description": "Actions the agent always asks about first."
+        },
+        "deny": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/permissionRule"
+          },
+          "description": "Actions the agent may never take. Deny rules take precedence over ask and allow rules."
+        }
+      }
+    },
+    "statusLine": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "command"
+          ],
+          "default": "command",
+          "description": "Optional. \"command\" is the only supported type."
+        },
+        "command": {
+          "type": "string",
+          "description": "Shell command to run, through sh -c (cmd /c on Windows). It receives the session state as JSON on stdin, and its output becomes the status line. Multi-line output and ANSI colors are supported, and a leading ~ expands to your home directory."
+        },
+        "padding": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0,
+          "description": "Number of blank lines above the status line."
+        },
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Set to false to stop running command and show the built-in status line instead. The command stays in settings.json."
+        },
+        "stack_with_default": {
+          "type": "boolean",
+          "default": false,
+          "description": "When true, shows your status line below the built-in one instead of replacing it."
+        }
+      }
+    },
+    "title": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "command"
+          ],
+          "default": "command",
+          "description": "Optional. \"command\" is the only supported type."
+        },
+        "command": {
+          "type": "string",
+          "description": "Shell command to run, through sh -c (cmd /c on Windows). It receives the session state as JSON on stdin, and its output becomes the window title: lines are joined with spaces and control characters are removed, so print one line of plain text."
+        },
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Set to false to stop updating the title. The command stays in settings.json."
+        }
+      }
+    },
+    "customModelsConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "customModels": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/customModel"
+          },
+          "description": "Custom models by key. The key or the label selects the model in /model or --model."
+        }
+      }
+    },
+    "customModel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "modelName"
+      ],
+      "properties": {
+        "modelName": {
+          "type": "string",
+          "description": "Required. The model to call, in the form gemini-api://<base_url>/models/<model>."
+        },
+        "label": {
+          "type": "string",
+          "description": "Name shown in /model. Defaults to \"Custom Model: <model>\"."
+        },
+        "maxTokens": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Context window size in tokens, including the response."
+        },
+        "modelFeatures": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Capabilities of the model. Each one is true unless you set it to false.",
+          "properties": {
+            "supportsImages": {
+              "type": "boolean",
+              "default": true
+            },
+            "supportsVideo": {
+              "type": "boolean",
+              "default": true
+            },
+            "supportsPdf": {
+              "type": "boolean",
+              "default": true
+            },
+            "supportsAudio": {
+              "type": "boolean",
+              "default": true
+            },
+            "supportsToolCalls": {
+              "type": "boolean",
+              "default": true
+            },
+            "supportsThinking": {
+              "type": "boolean",
+              "default": true
+            },
+            "zeroShotCapable": {
+              "type": "boolean",
+              "default": true
+            }
+          }
+        },
+        "toolFormatterType": {
+          "type": "string",
+          "enum": [
+            "TOOL_FORMATTER_TYPE_XML",
+            "TOOL_FORMATTER_TYPE_NONE",
+            "TOOL_FORMATTER_TYPE_HERMES",
+            "TOOL_FORMATTER_TYPE_LLAMA_3",
+            "TOOL_FORMATTER_TYPE_CHAT_TRANSCRIPT",
+            "TOOL_FORMATTER_TYPE_UNSPECIFIED"
+          ],
+          "default": "TOOL_FORMATTER_TYPE_XML",
+          "description": "How tools are presented to the model. TOOL_FORMATTER_TYPE_NONE uses the model API's native tool calling. Unrecognized values fall back to TOOL_FORMATTER_TYPE_XML."
+        },
+        "apiProvider": {
+          "type": "string",
+          "description": "Optional. Leave it unset; the CLI infers the provider from modelName."
+        },
+        "modelId": {
+          "type": "string",
+          "deprecated": true,
+          "description": "Not used."
+        }
+      }
+    },
+    "sandboxProxy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "http": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "HTTP proxy settings. address and certFile go together, and so do username and password; if either pair is incomplete, the CLI ignores sandboxProxy.",
+          "properties": {
+            "address": {
+              "type": "string",
+              "description": "The proxy's host:port.",
+              "examples": [
+                "proxy.example.com:3128"
+              ]
+            },
+            "certFile": {
+              "type": "string",
+              "description": "Path to the proxy's CA certificate, which the sandbox trusts."
+            },
+            "username": {
+              "type": "string",
+              "description": "Proxy user name. Requires password."
+            },
+            "password": {
+              "type": "string",
+              "description": "Proxy password. Requires username."
+            }
+          },
+          "dependentRequired": {
+            "address": [
+              "certFile"
+            ],
+            "certFile": [
+              "address"
+            ],
+            "username": [
+              "password"
+            ],
+            "password": [
+              "username"
+            ]
+          }
+        }
+      }
+    },
+    "gcpConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "project": {
+          "type": "string",
+          "description": "Google Cloud project ID."
+        },
+        "location": {
+          "type": "string",
+          "enum": [
+            "global",
+            "us",
+            "eu"
+          ],
+          "description": "Location chosen at sign-in."
+        }
+      }
+    }
+  }
+}

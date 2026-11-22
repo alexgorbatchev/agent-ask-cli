@@ -17,6 +17,7 @@ const maxRecordBytes = 32 << 20
 
 // Run publishes exactly one validated answer, or a sequenced live stream.
 func Run(ctx context.Context, o Options, stdin io.Reader, stdout io.Writer) (err error) {
+	o.Harness = normalizeHarness(o.Harness)
 	e := emitter{w: stdout, streaming: o.OutputMode == "stream"}
 	defer func() {
 		if err != nil && e.streaming {
@@ -54,7 +55,7 @@ func Run(ctx context.Context, o Options, stdin io.Reader, stdout io.Writer) (err
 	cmd := exec.CommandContext(ctx, v.executable, v.args...)
 	cmd.Dir = v.dir
 	cmd.Env = v.env
-	cmd.Stdin = strings.NewReader(p.prompt)
+	cmd.Stdin = strings.NewReader(v.stdin)
 	// Native stderr can contain config secrets, prompts and panic stacks. Drain it
 	// without forwarding; structured failure codes are the public diagnostic API.
 	cmd.Stderr = io.Discard

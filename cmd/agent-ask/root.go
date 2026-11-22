@@ -38,10 +38,10 @@ func newRunCommand() *cobra.Command {
 		cmd.MarkFlagsMutuallyExclusive(s.name, s.name+"-file", s.name+"-stdin")
 	}
 	f := cmd.Flags()
-	f.StringVar(&o.Harness, "harness", "", "Installed harness: claude or codex (required)")
+	f.StringVar(&o.Harness, "harness", "", "Installed harness: claude, codex, or agy (alias: antigravity) (required)")
 	f.StringVar(&o.InputFormat, "input-format", "text", "Input interpretation: text or json")
 	f.StringVar(&o.ConfigMode, "harness-config-mode", "inherit", "Native configuration baseline: inherit or clean")
-	f.StringVar(&o.ConfigFile, "harness-config-file", "", "Native configuration overlay file: Claude JSON or Codex TOML")
+	f.StringVar(&o.ConfigFile, "harness-config-file", "", "Native configuration overlay file: Claude JSON, Codex TOML, or Antigravity JSON")
 	f.StringVar(&o.HomeDir, "harness-home-dir", "", "Alternate native configuration/state/authentication directory")
 	f.StringVar(&o.Model, "model", "", "Native model name; omitted uses harness default")
 	f.StringVar(&o.Effort, "effort", "", "Native reasoning effort; omitted uses harness default")

@@ -1,4 +1,4 @@
-`agent-ask` lets agents submit one fresh request through an installed, authenticated Claude Code or Codex harness. Pass instructions, optional data, and optional JSON schemas directly on the command line, from files, or through stdin.
+`agent-ask` lets agents submit one fresh request through an installed, authenticated Claude Code, Codex, or Antigravity (`agy`) harness. Pass instructions, optional data, and optional JSON schemas directly on the command line, from files, or through stdin.
 
 CLI tools often need a basic, single-turn LLM call to clean, transform, or summarize data. `agent-ask` lets them reuse an already authenticated harness without obtaining or managing a separate API key.
 
@@ -11,7 +11,7 @@ CLI tools often need a basic, single-turn LLM call to clean, transform, or summa
 
 # How It Works
 
-- Select `claude` or `codex` and supply a prompt.
+- Select `claude`, `codex`, or `agy` (alias `antigravity`) and supply a prompt.
 - Add text or JSON input, optionally validating it against an input schema.
 - Add an output schema for a structured answer, or receive text.
 - Consume the final answer or watch provisional events while the harness works.
@@ -102,14 +102,14 @@ Sample Output (abridged; intermediate events and metadata omitted):
 
 | Flag | Short | Default | Description |
 | :--- | :--- | :--- | :--- |
-| `--harness` | | required | claude or codex |
+| `--harness` | | required | claude, codex, or agy (alias: antigravity) |
 | `--prompt`, `--prompt-file`, `--prompt-stdin` | | one required | Instructions as literal content, file, or stdin |
 | `--input`, `--input-file`, `--input-stdin` | | absent | Optional input through one source |
 | `--input-format` | | text | text or json |
 | `--input-schema`, `--input-schema-file`, `--input-schema-stdin` | | absent | Optional input JSON Schema through one source |
 | `--output-schema`, `--output-schema-file`, `--output-schema-stdin` | | absent | Optional output JSON Schema through one source |
 | `--harness-config-mode` | | inherit | inherit or clean |
-| `--harness-config-file` | | absent | Claude JSON or Codex TOML native overlay |
+| `--harness-config-file` | | absent | Claude JSON, Codex TOML, or Antigravity JSON native overlay |
 | `--harness-home-dir` | | native home | Existing configuration, state and authentication directory |
 | `--model` | | native default | Native model name |
 | `--effort` | | native default | Native effort level |

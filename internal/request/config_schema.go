@@ -14,8 +14,11 @@ import (
 //go:embed schemas/claude-settings.json
 var claudeSettingsSchema []byte
 
-var settingsValidator = sync.OnceValues(func() (*jsonschema.Schema, error) {
-	doc, err := jsonschema.UnmarshalJSON(bytes.NewReader(claudeSettingsSchema))
+//go:embed schemas/agy-settings.json
+var agySettingsSchema []byte
+
+func compileClosedSettingsSchema(raw []byte, location string) (*jsonschema.Schema, error) {
+	doc, err := jsonschema.UnmarshalJSON(bytes.NewReader(raw))
 	if err != nil {
 		return nil, err
 	}
@@ -23,11 +26,18 @@ var settingsValidator = sync.OnceValues(func() (*jsonschema.Schema, error) {
 	root["additionalProperties"] = false
 	c := jsonschema.NewCompiler()
 	c.UseLoader(jsonschema.FileLoader{})
-	const location = "https://json.schemastore.org/claude-code-settings.json"
 	if err := c.AddResource(location, root); err != nil {
 		return nil, err
 	}
 	return c.Compile(location)
+}
+
+var settingsValidator = sync.OnceValues(func() (*jsonschema.Schema, error) {
+	return compileClosedSettingsSchema(claudeSettingsSchema, "https://json.schemastore.org/claude-code-settings.json")
+})
+
+var agySettingsValidator = sync.OnceValues(func() (*jsonschema.Schema, error) {
+	return compileClosedSettingsSchema(agySettingsSchema, "https://antigravity.google/schemas/v1/settings.json")
 })
 
 func validateClaudeSettings(config map[string]any) error {
@@ -37,6 +47,17 @@ func validateClaudeSettings(config map[string]any) error {
 	}
 	if err := schema.Validate(config); err != nil {
 		return failure("configuration_failed", "Claude settings do not match the bundled native settings schema")
+	}
+	return nil
+}
+
+func validateAgySettings(config map[string]any) error {
+	schema, err := agySettingsValidator()
+	if err != nil {
+		return failure("configuration_failed", "Cannot initialize Antigravity settings validation")
+	}
+	if err := schema.Validate(config); err != nil {
+		return failure("configuration_failed", "Antigravity settings do not match the bundled native settings schema")
 	}
 	return nil
 }
