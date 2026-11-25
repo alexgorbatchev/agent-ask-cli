@@ -1,7 +1,5 @@
 `agent-ask` lets agents submit one fresh request through an installed, authenticated Claude Code, Codex, or Antigravity (`agy`) harness. Pass instructions, optional data, and optional JSON schemas directly on the command line, from files, or through stdin.
 
-The Go implementation is deprecated. See the [`go-legacy` branch](https://github.com/alexgorbatchev/agent-ask-cli/tree/go-legacy) for its source. Existing Go release tags remain available.
-
 CLI tools often need a basic, single-turn LLM call to clean, transform, or summarize data. `agent-ask` lets them reuse an already authenticated harness without obtaining or managing a separate API key.
 
 # What It Does
