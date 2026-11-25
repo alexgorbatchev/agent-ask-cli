@@ -10,7 +10,7 @@ name = "agent-ask"
 path = "src/main.rs"
 
 [dependencies]
-agent-parser = { git = "https://github.com/alexgorbatchev/agent-parser-rust.git", rev = "a7e9b1f96f538d98ed86c57a1e2db23198d0ff5a" }
+agent-parser = { git = "https://github.com/alexgorbatchev/agent-parser-rust.git", rev = "201822cbf57aa5684088ae0fcbc3b1713dffa9e6" }
 clap = "4.6"
 clap_complete = "4.6"
 cli-command-kit = { git = "https://github.com/alexgorbatchev/cli-command-kit-rust.git", rev = "9e154384e3fc19f930befe6b682656e8f93233cd" }
