@@ -7,7 +7,7 @@ use serde_json::{Map, Value, json};
 use std::{
     ffi::OsString,
     fs,
-    io::Write,
+    io::{self, Write},
     path::{Path, PathBuf, absolute},
     sync::OnceLock,
 };
@@ -28,8 +28,9 @@ pub fn build(
     prepared: &Prepared,
     workspace: &Path,
 ) -> Result<Invocation, Error> {
-    let work_dir = absolute(options.work_dir.as_deref().unwrap_or(Path::new(".")))
-        .map_err(|_| Error::invalid_request("Cannot resolve working directory"))?;
+    let Ok(work_dir) = absolute(options.work_dir.as_deref().unwrap_or(Path::new("."))) else {
+        return Err(Error::invalid_request("Cannot resolve working directory"));
+    };
     if !work_dir.is_dir() {
         return Err(Error::invalid_request("Working directory must exist"));
     }
@@ -43,25 +44,30 @@ pub fn build(
             "Selected harness executable is unavailable",
         )
     };
-    let executable = absolute(which::which(target).map_err(unavailable)?)
-        .map_err(|_| Error::new("harness_unavailable", "Cannot resolve harness executable"))?;
-    let home = options
-        .home_dir
-        .as_deref()
-        .map(|path| {
-            let dir = absolute(path)
-                .map_err(|_| Error::configuration("Cannot resolve harness home directory"))?;
-            if !dir.is_dir() {
-                return Err(Error::configuration("Harness home directory must exist"));
-            }
-            let key = match options.harness {
-                Harness::Claude => "CLAUDE_CONFIG_DIR",
-                Harness::Codex => "CODEX_HOME",
-                Harness::Agy => "HOME",
-            };
-            Ok((key, dir))
-        })
-        .transpose()?;
+    let Ok(executable) = absolute(which::which(target).map_err(unavailable)?) else {
+        return Err(Error::new(
+            "harness_unavailable",
+            "Cannot resolve harness executable",
+        ));
+    };
+    let home = if let Some(path) = &options.home_dir {
+        let Ok(dir) = absolute(path) else {
+            return Err(Error::configuration(
+                "Cannot resolve harness home directory",
+            ));
+        };
+        if !dir.is_dir() {
+            return Err(Error::configuration("Harness home directory must exist"));
+        }
+        let key = match options.harness {
+            Harness::Claude => "CLAUDE_CONFIG_DIR",
+            Harness::Codex => "CODEX_HOME",
+            Harness::Agy => "HOME",
+        };
+        Some((key, dir))
+    } else {
+        None
+    };
     let schema = prepared.raw_output_schema();
     let args = match options.harness {
         Harness::Claude => claude(options, schema, workspace)?,
@@ -101,15 +107,16 @@ fn stage_file(
     bytes: &[u8],
     error: &'static str,
 ) -> Result<OsString, Error> {
-    // The request directory is private, and the file keeps tempfile's private
-    // creation mode when it is persisted at the native adapter's fixed name.
-    let mut file =
-        tempfile::NamedTempFile::new_in(workspace).map_err(|_| Error::configuration(error))?;
-    file.write_all(bytes)
-        .map_err(|_| Error::configuration(error))?;
     let path = workspace.join(name);
-    file.persist(&path)
-        .map_err(|_| Error::configuration(error))?;
+    let staged = (|| -> io::Result<()> {
+        let mut file = tempfile::NamedTempFile::new_in(workspace)?;
+        file.write_all(bytes)?;
+        file.persist(&path)?;
+        Ok(())
+    })();
+    if staged.is_err() {
+        return Err(Error::configuration(error));
+    }
     Ok(path.into_os_string())
 }
 
@@ -119,8 +126,8 @@ fn stage_settings(
     workspace: &Path,
     args: &mut Vec<OsString>,
 ) -> Result<(), Error> {
-    static CLAUDE: OnceLock<Result<jsonschema::Validator, Error>> = OnceLock::new();
-    static AGY: OnceLock<Result<jsonschema::Validator, Error>> = OnceLock::new();
+    static CLAUDE: OnceLock<Option<jsonschema::Validator>> = OnceLock::new();
+    static AGY: OnceLock<Option<jsonschema::Validator>> = OnceLock::new();
     let (name, raw_schema, cache, initialize, invalid, stage) = match options.harness {
         Harness::Claude => (
             "claude-settings.json",
@@ -144,14 +151,13 @@ fn stage_settings(
         return Ok(());
     }
     let validator = cache.get_or_init(|| {
-        let mut schema: Value =
-            serde_json::from_str(raw_schema).map_err(|_| Error::configuration(initialize))?;
+        let mut schema: Value = serde_json::from_str(raw_schema).ok()?;
         schema["additionalProperties"] = json!(false);
-        jsonschema::validator_for(&schema).map_err(|_| Error::configuration(initialize))
+        jsonschema::validator_for(&schema).ok()
     });
-    let validator = validator
-        .as_ref()
-        .map_err(|error| Error::configuration(error.message))?;
+    let Some(validator) = validator else {
+        return Err(Error::configuration(initialize));
+    };
     let config = Value::Object(config);
     if !validator.is_valid(&config) {
         return Err(Error::configuration(invalid));
@@ -269,9 +275,9 @@ fn codex(
             ]
             .map(OsString::from),
         );
-        let work_dir = work_dir
-            .to_str()
-            .ok_or_else(|| Error::configuration("Cannot encode Codex configuration"))?;
+        let Some(work_dir) = work_dir.to_str() else {
+            return Err(Error::configuration("Cannot encode Codex configuration"));
+        };
         let project = toml::Value::Table(toml::Table::from_iter([(
             "trust_level".into(),
             toml::Value::String("untrusted".into()),

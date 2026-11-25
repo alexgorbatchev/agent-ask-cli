@@ -46,7 +46,7 @@ lint:
     cargo clippy --locked --all-targets -- -D warnings
 
 coverage:
-    cargo llvm-cov --locked --ignore-filename-regex '(^|/)tests/' --fail-under-lines 90
+    cargo llvm-cov --all-targets --locked --ignore-filename-regex '(^|/)tests/' --fail-under-lines 90 --fail-under-functions 90
 
 check: fmt-check lint test coverage
 

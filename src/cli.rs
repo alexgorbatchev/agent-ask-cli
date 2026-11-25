@@ -175,9 +175,9 @@ fn run_command() -> Command {
                 .value_name("duration")
                 .default_value("5m0s")
                 .value_parser(|value: &str| {
-                    go_parse_duration::parse_duration(value)
+                    agent_parser::parse_go_duration(value)
                         .map(|nanos| Duration::from_nanos(u64::try_from(nanos).unwrap_or_default()))
-                        .map_err(|error| format!("{error:?}"))
+                        .ok_or("Expected a Go duration such as 30s or 5m")
                 }),
         )
         .arg(bool_flag(

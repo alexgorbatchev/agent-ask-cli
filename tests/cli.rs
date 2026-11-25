@@ -672,6 +672,32 @@ fn failures_are_terminal_and_redacted() {
 }
 
 #[test]
+fn reports_an_unavailable_temporary_directory_before_starting_the_harness() {
+    let fixture = Fixture::native(CODEX, "exit 0");
+    let mut command = fixture.command("codex");
+    command
+        .env("TMPDIR", fixture.dir.path().join("absent"))
+        .args(["--prompt", "p"]);
+    let output = invoke(command, &[]);
+    error(&output, "configuration_failed");
+    assert!(!fixture.dir.path().join("args").exists());
+}
+
+#[test]
+fn request_timeout_accepts_go_microseconds_and_rejects_overflow() {
+    let fixture = Fixture::native(CODEX, "exit 0");
+    success(&fixture.run("codex", &["--prompt", "p", "--timeout", "1s1μs"], &[]));
+    error(
+        &fixture.run(
+            "codex",
+            &["--prompt", "p", "--timeout", "9223372036854775808ns"],
+            &[],
+        ),
+        "invalid_request",
+    );
+}
+
+#[test]
 fn timeout_and_signal_stop_the_owned_process() {
     let fixture = Fixture::script(
         "cat >/dev/null\nprintf '%s\\n' '{\"type\":\"thread.started\",\"thread_id\":\"ready\"}'\nexec sleep 30",
