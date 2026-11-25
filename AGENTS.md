@@ -1,0 +1,31 @@
+# agent-ask-cli-rust
+
+Rust wrapper for one fresh request through an installed Claude Code, Codex, or Antigravity (`agy`) harness. The executable and skill are both named `agent-ask`.
+
+## Source installation
+
+From this checkout with the Rust toolchain installed, run `cargo install --locked --path .`. Install and authenticate a native harness before running a request.
+
+## Commands
+
+- `just setup`: fetch the locked Cargo dependencies.
+- `just build`: compile `bin/agent-ask`.
+- `just run [args...]` / `just run-ai [args...]`: run the CLI.
+- `just test`, `just lint`, and `just check`: fixture tests, static checks, and coverage.
+- `just fmt`: format Rust sources.
+
+## Contract
+
+- Maintain `docs/cli-contract.md` as the CLI contract. Literal values use unqualified flags, paths use `-file` or `-dir`, and stdin uses `-stdin`. All output selection flags have the `--output-` prefix.
+- Request output is machine oriented in every environment: buffered JSON by default, answer-only `--output-plain`, or NDJSON `--output-stream`. Keep stderr separate and return stable error codes.
+- Both schemas are optional. Validate input before launching a harness and output before publishing success. Never guess that JSON-looking text is structured output without an output schema.
+- Use `agent-parser` live parsing rather than adding harness protocol parsers here. Preserve native metadata and usage; never synthesize deltas or sum overlapping usage snapshots.
+- Validate supplied Claude settings against the bundled native schema: print mode can silently ignore invalid settings. Keep schema provenance and licensing with the asset. Codex override paths use native dotted names without TOML key quoting; nested arbitrary keys belong inside encoded TOML values.
+- Invoke native harness executables directly. Reuse their authentication, configuration and permission systems. Clean mode suppresses customizations while retaining native authentication and administrator policy. Never copy credentials into temporary homes.
+- One fresh request may include native tool calls and internal retries. Drain output and wait for process exit before selecting the final native result. Own cancellation and terminate the complete process tree.
+- Production disposable files use an owned OS temporary directory and are removed on completion. Agent development artifacts may use `.tmp/`.
+- Keep `skills/agent-ask/SKILL.md` synchronized in the same change as every public command, option, default, environment variable, output or side-effect change. The top-level `skill` command prints the fixed Skills CLI install instructions and URL; it never embeds or reads the skill at runtime.
+- Use clap and `cli-command-kit`. Agent help begins with the operational skill alert. Raw `--version` output contains only the Cargo package version and a newline.
+- Keep tests offline and hermetic. Behavioral changes include meaningful tests. Maintain at least 90% line coverage and run `just check` before committing.
+- Update `go-upstream.json` only after checking behavior against the recorded Go commit.
+- Preserve unrelated workspace changes. Ask before registering a workspace submodule. Inspect destination hosts and staged changes for private domains before committing or pushing.

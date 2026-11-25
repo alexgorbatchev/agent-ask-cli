@@ -1,0 +1,26 @@
+[package]
+name = "agent-ask-cli"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+description = "Run one request through an installed coding harness"
+
+[[bin]]
+name = "agent-ask"
+path = "src/main.rs"
+
+[dependencies]
+agent-parser = { git = "https://github.com/alexgorbatchev/agent-parser-rust.git", rev = "dab13ad3920b6e3823f5ef44be38280e3e98f220" }
+clap = "4.6"
+clap_complete = "4.6"
+cli-command-kit = { git = "https://github.com/alexgorbatchev/cli-command-kit-rust.git", rev = "9e154384e3fc19f930befe6b682656e8f93233cd" }
+go-parse-duration = "0.1.1"
+jsonschema = { version = "0.63", default-features = false, features = ["arbitrary-precision"] }
+process-wrap = { version = "10", default-features = false, features = ["tokio1", "job-object", "process-group"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["arbitrary_precision"] }
+tempfile = "3"
+tokio = { version = "1", features = ["io-util", "macros", "process", "rt", "signal", "time"] }
+toml = "1"
+url = "2"
+which = "8"

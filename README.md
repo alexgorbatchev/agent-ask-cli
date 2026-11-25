@@ -1,0 +1,112 @@
+`agent-ask` lets agents submit one fresh request through an installed, authenticated Claude Code, Codex, or Antigravity (`agy`) harness. Pass instructions, optional data, and optional JSON schemas directly on the command line, from files, or through stdin.
+
+CLI tools often need a basic, single-turn LLM call to clean, transform, or summarize data. `agent-ask` lets them reuse an already authenticated harness without obtaining or managing a separate API key.
+
+# What It Does
+
+- **Reuse existing login:** Use the selected harness's configured authentication and model selection.
+- **Validate transformations:** Check input before launch and structured output before success.
+- **Choose output:** Return a JSON envelope, the answer alone, or a stream of normalized events.
+- **Control configuration:** Inherit native settings, select a clean baseline, or supply an explicit native overlay and home directory.
+
+# How It Works
+
+- Select `claude`, `codex`, or `agy` (alias `antigravity`) and supply a prompt.
+- Add text or JSON input, optionally validating it against an input schema.
+- Add an output schema for a structured answer, or receive text.
+- Consume the final answer or watch provisional events while the harness works.
+
+# How it Really Works
+
+- Each call creates a fresh session. The harness can use its tools and make internal model calls or retries; native permissions remain applicable.
+- Authentication belongs to the selected harness. Calls consume the account's normal subscription usage or configured API billing.
+- Clean mode suppresses discovered customizations while preserving authentication and administrator policy. Explicit model, effort and native configuration options customize the request.
+- Buffered output reaches stdout only after a successful process exit and output validation. Failures use a stable JSON error on stderr and exit 1. Streaming writes sequenced NDJSON with one terminal result or error.
+- Schema resolution is local. Native constrained output may accept a smaller JSON Schema subset than local validation.
+- Disposable schemas and merged Claude settings use an owned OS temporary directory and are removed after the request. Cancellation and timeout terminate the harness and its spawned tools.
+
+# Installation
+
+See the [source installation instructions](AGENTS.md#source-installation) for this Rust package.
+
+# Setup
+
+- Install and authenticate the selected harness: [Claude Code](https://code.claude.com/docs/en/quickstart), [Codex](https://learn.chatgpt.com/docs/quickstart), or the Antigravity (`agy`) CLI. Make its executable available on `PATH`, or supply it through `--harness-executable-file`.
+- Use a harness version with the documented native options. The CLI targets Claude Code 2.1.292, Codex 0.163.0, and Antigravity CLI 1.5.x. Older builds may reject unsupported native flags.
+
+# Quick Start
+
+```sh
+agent-ask request run --harness claude \
+  --prompt 'Reply with exactly OK' --output-plain
+```
+
+Sample Output:
+
+```text
+OK
+```
+
+```sh
+agent-ask request run --harness codex --effort low \
+  --prompt 'Remove the artist prefix from the title' \
+  --input-format json --input '{"title":"Artist - Song","artist":"Artist"}' \
+  --output-schema '{"type":"object","properties":{"title":{"type":"string"}},"required":["title"],"additionalProperties":false}'
+```
+
+Sample Output (session and usage values vary):
+
+```json
+{"harness":"codex","output_kind":"json","output":{"title":"Song"},"session_id":"01a16a6a-9bf5-7340-b9b3-4f8c217d5cb0","usage":{"input":20250,"output":28,"cacheRead":0,"cacheWrite":0,"reasoning":0,"total":20278}}
+```
+
+```sh
+printf '%s' 'Meeting notes: finish the CLI today and publish the release tomorrow.' | agent-ask request run \
+  --harness claude --prompt 'Summarize' --input-stdin --output-stream
+```
+
+Sample Output (abridged; intermediate events and metadata omitted):
+
+```jsonl
+{"sequence":1,"type":"started","data":{"harness":"claude"}}
+{"sequence":3,"type":"event","data":{"eventType":"agent_message_delta","data":{"delta":"Finish the CLI today; "}}}
+{"sequence":7,"type":"result","data":{"harness":"claude","output_kind":"text","output":"Finish the CLI today; publish the release tomorrow."}}
+```
+
+# Options & Flags
+
+`agent-ask`
+
+| Flag | Short | Default | Description |
+| :--- | :--- | :--- | :--- |
+| `--help` | `-h` | false | Print help |
+| `--version` | `-v` | false | Print raw version |
+
+`agent-ask request run`
+
+| Flag | Short | Default | Description |
+| :--- | :--- | :--- | :--- |
+| `--harness` | | required | claude, codex, or agy (alias: antigravity) |
+| `--prompt`, `--prompt-file`, `--prompt-stdin` | | one required | Instructions as literal content, file, or stdin |
+| `--input`, `--input-file`, `--input-stdin` | | absent | Optional input through one source |
+| `--input-format` | | text | text or json |
+| `--input-schema`, `--input-schema-file`, `--input-schema-stdin` | | absent | Optional input JSON Schema through one source |
+| `--output-schema`, `--output-schema-file`, `--output-schema-stdin` | | absent | Optional output JSON Schema through one source |
+| `--harness-config-mode` | | inherit | inherit or clean |
+| `--harness-config-file` | | absent | Claude JSON, Codex TOML, or Antigravity JSON native overlay |
+| `--harness-home-dir` | | native home | Existing configuration, state and authentication directory |
+| `--model` | | native default | Native model name |
+| `--effort` | | native default | Native effort level |
+| `--thinking` | | auto | auto, on, or supported off |
+| `--timeout` | | 5m | Positive execution timeout |
+| `--working-dir` | | caller directory | Directory for native tools |
+| `--harness-executable-file` | | lookup on PATH | Explicit executable |
+| `--output-json` | | effective default | Validated JSON result envelope |
+| `--output-plain` | | false | Answer only |
+| `--output-stream` | | false | NDJSON events and terminal result or error |
+
+Only one content source may read stdin. Output modes are mutually exclusive. See the [CLI contract](docs/cli-contract.md) and [operational skill](skills/agent-ask/SKILL.md) for complete validation, native option mappings, configuration precedence, output schemas, error codes, and examples.
+
+# License
+
+[MIT](LICENSE).
