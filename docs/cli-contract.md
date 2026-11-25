@@ -1,12 +1,12 @@
 ---
 created_on: 2026-10-23 11:12
-last_modified: 2026-11-21 07:01
+last_modified: 2026-11-25 05:05
 status: current
 ---
 
 # agent-ask contract
 
-This Go CLI serves agents that submit one fresh request to an already installed,
+This CLI serves agents that submit one fresh request to an already installed,
 authenticated Claude Code, Codex, or Antigravity (`agy`) harness. Tools, internal model requests, and
 native retries are allowed until that request finishes. There is no conversation
 resume, API-key management, harness installation, or Engine-specific behavior.

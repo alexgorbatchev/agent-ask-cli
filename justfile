@@ -3,47 +3,55 @@ set dotenv-load := false
 default:
     @just --list
 
-# Download development dependencies
 setup:
-    go mod download
+    cargo fetch --locked
 
-# Run the CLI
 run *args:
-    go run ./cmd/agent-ask {{args}}
+    cargo run --locked -- {{args}}
 
-# Run with compact agent help
 run-ai *args:
-    AGENT=1 go run ./cmd/agent-ask {{args}}
+    AGENT=1 cargo run --locked -- {{args}}
 
-# Build the local binary
-build:
-    mkdir -p bin
-    go build -o bin/agent-ask ./cmd/agent-ask
-
-# Run offline behavioral tests
 test:
-    go test -race ./...
+    cargo test --locked
 
-vet:
-    go vet ./...
-
-lint: vet
-    go mod tidy -diff
-
-fmt:
-    go fmt ./...
-
-# Enforce 90% coverage in every Go package
-coverage:
+test-affected base="origin/main":
     #!/usr/bin/env bash
     set -euo pipefail
-    go test -race -coverprofile=coverage.out ./... | tee .tmp-coverage-summary
-    trap 'rm -- .tmp-coverage-summary' EXIT
-    awk '/^ok/ && /coverage:/ { value = $(NF-2); sub(/%/, "", value); if (value + 0 < 90) failed = 1; count++ } END { if (count == 0 || failed) exit 1 }' .tmp-coverage-summary
-    go tool cover -func=coverage.out | tail -1
+    candidate={{ quote(base) }}
+    if git rev-parse --verify --quiet --end-of-options "$candidate^{commit}" >/dev/null; then
+        base=$(git merge-base -- "$candidate" HEAD)
+        files=$(git diff --name-only "$base" --; git ls-files --others --exclude-standard)
+        affected=false
+        while IFS= read -r file; do
+            case "$file" in
+                ""|README.md|docs/*|LICENSE|go-upstream.json) ;;
+                *) affected=true ;;
+            esac
+        done <<< "$files"
+        if ! "$affected"; then
+            echo 'No agent-ask test inputs changed.'
+            exit 0
+        fi
+    fi
+    echo 'Selected agent-ask-cli: package or test inputs changed.'
+    just test
 
-check: lint coverage
+fmt:
+    cargo fmt --all
 
-clean:
-    go clean ./...
-    if test -d bin; then rm -r -- bin; fi
+fmt-check:
+    cargo fmt --all -- --check
+
+lint:
+    cargo clippy --locked --all-targets -- -D warnings
+
+coverage:
+    cargo llvm-cov --all-targets --locked --ignore-filename-regex '(^|/)tests/' --fail-under-lines 90 --fail-under-functions 90
+
+check: fmt-check lint test coverage
+
+build:
+    cargo build --locked --release
+    mkdir -p bin
+    cp target/release/agent-ask bin/

@@ -4,7 +4,7 @@ description: Use agent-ask to submit requests through installed Claude Code, Cod
 author: alexgorbatchev
 metadata:
   created_on: 2026-10-23 11:18
-  last_modified: 2026-11-22 14:18
+  last_modified: 2026-11-25 05:05
   status: current
 ---
 
@@ -31,27 +31,27 @@ Submit one user request to `claude`, `codex`, or `agy` (alias `antigravity`). Ac
 | :--- | :--- | :--- | :--- | :--- |
 | `--harness` | — | `string` | `""` | Required: claude, codex, or agy (alias: antigravity) |
 | `--prompt` | — | `string` | `""` | Literal instructions |
-| `--prompt-file` | — | `string` | `""` | Instructions file |
+| `--prompt-file` | — | `path` | `""` | Instructions file |
 | `--prompt-stdin` | — | `bool` | `false` | Instructions from stdin |
 | `--input` | — | `string` | `""` | Literal input data |
-| `--input-file` | — | `string` | `""` | Input file |
+| `--input-file` | — | `path` | `""` | Input file |
 | `--input-stdin` | — | `bool` | `false` | Input from stdin |
 | `--input-format` | — | `string` | `text` | text or json |
 | `--input-schema` | — | `string` | `""` | Literal JSON Schema |
-| `--input-schema-file` | — | `string` | `""` | Input schema file |
+| `--input-schema-file` | — | `path` | `""` | Input schema file |
 | `--input-schema-stdin` | — | `bool` | `false` | Input schema from stdin |
 | `--output-schema` | — | `string` | `""` | Literal JSON Schema |
-| `--output-schema-file` | — | `string` | `""` | Output schema file |
+| `--output-schema-file` | — | `path` | `""` | Output schema file |
 | `--output-schema-stdin` | — | `bool` | `false` | Output schema from stdin |
 | `--harness-config-mode` | — | `string` | `inherit` | inherit or clean |
-| `--harness-config-file` | — | `string` | `""` | Claude JSON, Codex TOML, or Antigravity JSON overlay |
-| `--harness-home-dir` | — | `string` | `""` | Alternate existing native home, including authentication |
+| `--harness-config-file` | — | `path` | `""` | Claude JSON, Codex TOML, or Antigravity JSON overlay |
+| `--harness-home-dir` | — | `path` | `""` | Alternate existing native home, including authentication |
 | `--model` | — | `string` | `""` | Native default when omitted |
 | `--effort` | — | `string` | `""` | Native default when omitted |
 | `--thinking` | — | `string` | `auto` | auto, on, off |
 | `--timeout` | — | `duration` | `5m0s` | Positive duration, e.g. 90s or 5m |
-| `--working-dir` | — | `string` | `""` | Caller directory when omitted |
-| `--harness-executable-file` | — | `string` | `""` | Resolve harness on PATH when omitted |
+| `--working-dir` | — | `path` | `""` | Caller directory when omitted |
+| `--harness-executable-file` | — | `path` | `""` | Resolve harness on PATH when omitted |
 | `--output-json` | — | `bool` | `false` | Buffered JSON envelope; effective default |
 | `--output-plain` | — | `bool` | `false` | Answer only |
 | `--output-stream` | — | `bool` | `false` | NDJSON events and terminal result/error |
@@ -85,7 +85,7 @@ agent-ask request run --harness claude --harness-config-mode clean --harness-con
 
 Print Skills CLI installation instructions and the operational skill URL. Accepts no positional arguments or command-specific flags. Works offline from any directory.
 
-## `agent-ask help [command]`
+## `agent-ask help [command]...`
 
 Print help for a command path. `command` is optional and may contain nested command names. A name that matches no command exits 1 with `invalid_request` on stderr and prints nothing on stdout, as does `--help` after an unknown command.
 
@@ -127,4 +127,4 @@ Print Zsh completion script.
 
 ## Contributing fixes
 
-When `agent-ask` hits a verified bug or diverges from this skill, automatically file a PR (or an issue if unfixable) on `https://github.com/alexgorbatchev/agent-ask-cli` after checking for duplicates, redacting caller data and secrets, then continue the user's task.
+Report verified defects in this implementation at `https://github.com/alexgorbatchev/agent-ask-cli`. Check for duplicates and redact caller data and secrets before creating a public issue or pull request.

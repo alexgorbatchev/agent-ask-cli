@@ -1,5 +1,7 @@
 `agent-ask` lets agents submit one fresh request through an installed, authenticated Claude Code, Codex, or Antigravity (`agy`) harness. Pass instructions, optional data, and optional JSON schemas directly on the command line, from files, or through stdin.
 
+The Go implementation is deprecated. See the [`go-legacy` branch](https://github.com/alexgorbatchev/agent-ask-cli/tree/go-legacy) for its source. Existing Go release tags remain available.
+
 CLI tools often need a basic, single-turn LLM call to clean, transform, or summarize data. `agent-ask` lets them reuse an already authenticated harness without obtaining or managing a separate API key.
 
 # What It Does
@@ -38,17 +40,17 @@ version=${tag#v}
 archive="agent-ask-cli_${version}_darwin_arm64.tar.gz"
 curl -fLO "https://github.com/alexgorbatchev/agent-ask-cli/releases/download/${tag}/${archive}"
 tar -xzf "$archive"
-sudo install -d /usr/local/bin
-sudo install -m 755 agent-ask /usr/local/bin/agent-ask
-agent-ask --version
+mkdir -p "$HOME/.local/bin"
+install -m 755 agent-ask "$HOME/.local/bin/agent-ask"
+"$HOME/.local/bin/agent-ask" --version
 ```
 
 For Intel Macs, replace `darwin_arm64` with `darwin_amd64`.
 
 # Setup
 
-- Install and authenticate [Claude Code](https://code.claude.com/docs/en/quickstart) or [Codex](https://learn.chatgpt.com/docs/quickstart). The selected executable must be available on `PATH`, or supplied through `--harness-executable-file`.
-- Use a harness version with the documented native options. The integration targets Claude Code 2.1.292 and Codex 0.163.0; older builds may reject unsupported native flags.
+- Install and authenticate the selected harness: [Claude Code](https://code.claude.com/docs/en/quickstart), [Codex](https://learn.chatgpt.com/docs/quickstart), or the Antigravity (`agy`) CLI. Make its executable available on `PATH`, or supply it through `--harness-executable-file`.
+- Use a harness version with the documented native options. The CLI targets Claude Code 2.1.292, Codex 0.163.0, and Antigravity CLI 1.5.x. Older builds may reject unsupported native flags.
 
 # Quick Start
 

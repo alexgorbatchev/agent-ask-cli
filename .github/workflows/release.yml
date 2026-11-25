@@ -1,34 +1,133 @@
 name: Release
+
 on:
   push:
     tags: ['v*']
+  workflow_dispatch:
+
 permissions:
-  contents: write
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   verify:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-go@v7
-        with:
-          go-version-file: go.mod
-      - uses: extractions/setup-just@v4
-      - run: just setup
-      - run: just check
-  release:
+    uses: ./.github/workflows/ci.yml
+
+  package:
     needs: verify
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-22.04
+            os: linux
+            arch: amd64
+            suffix: ''
+          - runner: ubuntu-22.04-arm
+            os: linux
+            arch: arm64
+            suffix: ''
+          - runner: macos-15-intel
+            os: darwin
+            arch: amd64
+            suffix: ''
+          - runner: macos-15
+            os: darwin
+            arch: arm64
+            suffix: ''
+          - runner: windows-2025
+            os: windows
+            arch: amd64
+            suffix: '.exe'
+          - runner: windows-11-arm
+            os: windows
+            arch: arm64
+            suffix: '.exe'
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: bash
+    env:
+      RUSTUP_TOOLCHAIN: '1.100.0'
+      BIN: agent-ask
+      NAME: agent-ask-cli
+      ASSET_OS: ${{ matrix.os }}
+      ASSET_ARCH: ${{ matrix.arch }}
+      SUFFIX: ${{ matrix.suffix }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          fetch-depth: 0
-      - uses: actions/setup-go@v7
-        with:
-          go-version-file: go.mod
-      - uses: goreleaser/goreleaser-action@v7
-        with:
-          distribution: goreleaser
-          version: 'v2.19.0'
-          args: release --clean
+          persist-credentials: false
+      - name: Set up Rust
+        run: rustup toolchain install "$RUSTUP_TOOLCHAIN" --profile minimal
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
+      - name: Build optimized binary
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CARGO_PROFILE_RELEASE_LTO: thin
+          CARGO_PROFILE_RELEASE_CODEGEN_UNITS: '1'
+          CARGO_PROFILE_RELEASE_STRIP: symbols
+        run: cargo build --locked --release --bin "$BIN"
+      - name: Smoke test and package
+        run: |
+          executable="$BIN$SUFFIX"
+          version="$("./target/release/$executable" --version | tr -d '\r')"
+          if [[ "$GITHUB_REF_TYPE" == tag && "$GITHUB_REF_NAME" != "v$version" ]]; then
+            printf 'Tag %s does not match binary version %s\n' "$GITHUB_REF_NAME" "$version" >&2
+            exit 1
+          fi
+          mkdir -p package dist
+          cp "target/release/$executable" package/
+          cp LICENSE README.md package/
+          package_files=("$executable" LICENSE README.md)
+          mkdir -p package/internal/request/schemas
+          cp src/schemas/LICENSE src/schemas/SOURCE.md package/internal/request/schemas/
+          package_files+=(internal/request/schemas/LICENSE internal/request/schemas/SOURCE.md)
+          if [[ "$ASSET_OS" == windows ]]; then
+            extension=zip
+            archive="dist/${NAME}_${version}_${ASSET_OS}_${ASSET_ARCH}.$extension"
+            (cd package && python -c '
+          import sys
+          from zipfile import ZipFile, ZIP_DEFLATED
+          with ZipFile(sys.argv[1], "w", ZIP_DEFLATED) as output:
+              for path in sys.argv[2:]:
+                  output.write(path)
+          ' "../$archive" "${package_files[@]}")
+          else
+            extension=tar.gz
+            archive="dist/${NAME}_${version}_${ASSET_OS}_${ASSET_ARCH}.$extension"
+            (cd package && tar -czf "../$archive" "${package_files[@]}")
+          fi
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: release-${{ matrix.os }}-${{ matrix.arch }}
+          path: dist/*
+          if-no-files-found: error
+
+  publish:
+    if: github.event_name == 'push' && github.ref_type == 'tag'
+    needs: package
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          pattern: release-*
+          merge-multiple: true
+          path: dist
+      - name: Publish release and checksums
+        working-directory: dist
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          shopt -s nullglob
+          archives=(*.tar.gz *.zip)
+          test "${#archives[@]}" -eq 6
+          sha256sum "${archives[@]}" > checksums.txt
+          gh release create "$GITHUB_REF_NAME" "${archives[@]}" checksums.txt \
+            --repo "$GITHUB_REPOSITORY" --verify-tag --title "$GITHUB_REF_NAME" --notes-from-tag
