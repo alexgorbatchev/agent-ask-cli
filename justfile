@@ -18,8 +18,9 @@ test:
 test-affected base="origin/main":
     #!/usr/bin/env bash
     set -euo pipefail
-    if git rev-parse --verify --quiet "{{base}}^{commit}" >/dev/null; then
-        base=$(git merge-base "{{base}}" HEAD)
+    candidate={{ quote(base) }}
+    if git rev-parse --verify --quiet --end-of-options "$candidate^{commit}" >/dev/null; then
+        base=$(git merge-base -- "$candidate" HEAD)
         files=$(git diff --name-only "$base" --; git ls-files --others --exclude-standard)
         affected=false
         while IFS= read -r file; do
