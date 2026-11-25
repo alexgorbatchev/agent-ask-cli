@@ -27,5 +27,4 @@ From this checkout with the Rust toolchain installed, run `cargo install --locke
 - Keep `skills/agent-ask/SKILL.md` synchronized in the same change as every public command, option, default, environment variable, output or side-effect change. The top-level `skill` command prints the fixed Skills CLI install instructions and URL; it never embeds or reads the skill at runtime.
 - Use clap and `cli-command-kit`. Agent help begins with the operational skill alert. Raw `--version` output contains only the Cargo package version and a newline.
 - Keep tests offline and hermetic. Behavioral changes include meaningful tests. Maintain at least 90% line coverage and run `just check` before committing.
-- Update `go-upstream.json` only after checking behavior against the recorded Go commit.
 - Preserve unrelated workspace changes. Ask before registering a workspace submodule. Inspect destination hosts and staged changes for private domains before committing or pushing.

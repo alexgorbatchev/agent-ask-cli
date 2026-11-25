@@ -25,7 +25,7 @@ test-affected base="origin/main":
         affected=false
         while IFS= read -r file; do
             case "$file" in
-                ""|README.md|docs/*|LICENSE|go-upstream.json) ;;
+                ""|README.md|docs/*|LICENSE) ;;
                 *) affected=true ;;
             esac
         done <<< "$files"
